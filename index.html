@@ -3,289 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
-    <title>Cyber Neon Runner</title>
+    <title>Cyber Neon Runner Pro</title>
     <style>
-        /* Полный сброс отступов и настройка футуристичного фона */
-        body { 
-            margin: 0; 
-            background: #05050a; 
-            overflow: hidden; 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            color: #fff; 
-        }
-        
-        /* Стилизация игрового холста под неоновый автомат */
-        #gameCanvas { 
-            display: block; 
-            margin: 0 auto; 
-            background: #0d0e15; 
-            box-shadow: 0 0 20px #00f3ff; 
-        }
-        
-        /* Счётчик очков во время игры */
-        .ui { 
-            position: absolute; 
-            top: 20px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            font-size: 28px; 
-            font-weight: bold; 
-            text-shadow: 0 0 10px #00f3ff; 
-            letter-spacing: 2px;
-        }
-        
-        /* Общие стили для экранов Старта и Проигрыша */
-        .screen { 
-            display: none; 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(5, 5, 10, 0.85); 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-        }
-        
-        /* Класс для включения видимости экранов */
-        .active { 
-            display: flex; 
-        }
-        
-        /* Неоновые заголовки */
-        h1 { 
-            font-size: 36px; 
-            text-shadow: 0 0 15px #ff007f; 
-            margin-bottom: 30px; 
-            letter-spacing: 3px;
-            text-align: center;
-        }
-        
-        /* Киберпанк-кнопки */
-        button { 
-            background: transparent; 
-            border: 2px solid #00f3ff; 
-            color: #00f3ff; 
-            padding: 14px 35px; 
-            font-size: 18px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            text-shadow: 0 0 5px #00f3ff; 
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); 
-            transition: 0.2s ease; 
-            margin: 10px; 
-            font-weight: bold;
-        }
-        
-        button:hover { 
-            background: #00f3ff; 
-            color: #05050a; 
-            box-shadow: 0 0 25px #00f3ff; 
-        }
-        
-        /* Особая кнопка для просмотра рекламы */
-        .ad-btn { 
-            border-color: #ff007f; 
-            color: #ff007f; 
-            text-shadow: 0 0 5px #ff007f; 
-        }
-        
-        .ad-btn:hover { 
-            background: #ff007f; 
-            color: #fff; 
-            box-shadow: 0 0 25px #ff007f; 
-        }
+        body { margin: 0; background: #05050a; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: #fff; user-select: none; }
+        #gameCanvas { display: block; margin: 0 auto; background: #0d0e15; box-shadow: 0 0 20px #00f3ff; }
+        .ui-panel { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; font-size: 20px; font-weight: bold; text-shadow: 0 0 10px #00f3ff; z-index: 5; }
+        .screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,5,10,0.9); flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        .active { display: flex; }
+        h1 { font-size: 32px; text-shadow: 0 0 15px #ff007f; margin-bottom: 20px; text-align: center; }
+        button { background: transparent; border: 2px solid #00f3ff; color: #00f3ff; padding: 10px 25px; font-size: 16px; border-radius: 8px; cursor: pointer; text-shadow: 0 0 5px #00f3ff; box-shadow: 0 0 10px rgba(0,243,255,0.2); transition: 0.2s; margin: 5px; width: 260px; font-weight: bold; }
+        button:hover { background: #00f3ff; color: #05050a; box-shadow: 0 0 20px #00f3ff; }
+        .ad-btn { border-color: #ff007f; color: #ff007f; text-shadow: 0 0 5px #ff007f; }
+        .ad-btn:hover { background: #ff007f; color: #fff; box-shadow: 0 0 20px #ff007f; }
+        .shop-grid { display: grid; grid-template-columns: 1fr; gap: 10px; max-height: 300px; overflow-y: auto; padding: 10px; width: 280px; }
+        .shop-item { border: 1px solid #c5a1ff; padding: 10px; border-radius: 8px; text-align: center; background: #1f2833; }
     </style>
 </head>
 <body>
 
-<!-- Игровой интерфейс с очками -->
-<div class="ui" id="scoreDiv">SCORE: 0</div>
-
-<!-- Стартовое меню игры -->
-<div class="screen active" id="startScreen">
-    <h1>CYBER NEON RUNNER</h1>
-    <button onclick="startGame()">НАЧАТЬ ИГРУ</button>
+<div class="ui-panel" id="uiPanel" style="display:none;">
+    <div id="scoreDiv">SCORE: 0</div>
+    <div id="coinDiv">🪙: 0</div>
 </div>
 
-<!-- Экран конца игры (Game Over) -->
+<!-- 1. ГЛАВНОЕ МЕНЮ -->
+<div class="screen active" id="menuScreen">
+    <h1>CYBER RUNNER EVO</h1>
+    <div style="font-size:18px; color:#ff007f; margin-bottom:20px;">Баланс: <span id="menuCoins">0</span> 🪙</div>
+    <button onclick="changeScreen('menuScreen', 'game')">СТАРТ ЗАБЕГА</button>
+    <button onclick="changeScreen('menuScreen', 'shopScreen')">🏪 МАГАЗИН СКИНОВ</button>
+    <button onclick="changeScreen('menuScreen', 'musicScreen')">🎵 МАГАЗИН МУЗЫКИ</button>
+</div>
+
+<!-- 2. МАГАЗИН СКИНОВ И ФОНОВ -->
+<div class="screen" id="shopScreen">
+    <h1>ВНЕШНИЙ ВИД</h1>
+    <div class="shop-grid">
+        <div class="shop-item">
+            <div>🟦 Скин: Дефолтный Куб</div>
+            <button style="width:100%; font-size:12px;" onclick="selectSkin('cube')">ВЫБРАТЬ</button>
+        </div>
+        <div class="shop-item">
+            <div>🤖 Скин: ИИ-Робот (1000 🪙)</div>
+            <button style="width:100%; font-size:12px;" id="skinBtn1" onclick="buySkin('robot', 1000)">КУПИТЬ</button>
+        </div>
+        <div class="shop-item">
+            <div>🐰 Скин: Кибер-Заяц (3000 🪙)</div>
+            <button style="width:100%; font-size:12px;" id="skinBtn2" onclick="buySkin('bunny', 3000)">КУПИТЬ</button>
+        </div>
+        <div class="shop-item">
+            <div>🌌 Фон: Космос (500 🪙)</div>
+            <button style="width:100%; font-size:12px;" id="bgBtn1" onclick="buyBg('space', 500)">КУПИТЬ</button>
+        </div>
+    </div>
+    <button onclick="changeScreen('shopScreen', 'menuScreen')">НАЗАД В МЕНЮ</button>
+</div>
+
+<!-- 3. МАГАЗИН МУЗЫКИ -->
+<div class="screen" id="musicScreen">
+    <h1>МУЗЫКАЛЬНЫЙ ХАБ</h1>
+    <div style="font-size:14px; margin-bottom:10px; color:#c5a1ff;" id="adCounter">Просмотрено реклам для кастомного трека: 0/10</div>
+    <button class="ad-btn" style="width:260px;" onclick="watchMusicAd()">СМОТРЕТЬ РЕКЛАМУ ДЛЯ МУЗЫКИ</button>
+    
+    <div id="customMusicUpload" style="display:none; margin:10px 0;">
+        <label for="audioFile" style="color:#00f3ff; cursor:pointer; font-weight:bold;">🔥 ЗАГРУЗИТЬ СВОЙ MP3 ТРЕК:</label><br>
+        <input type="file" id="audioFile" accept="audio/*" onchange="loadCustomMusic(event)" style="margin-top:5px;">
+    </div>
+
+    <div class="shop-grid" style="margin-top:10px;">
+        <div class="shop-item">
+            <div>🎵 Synthwave Track (Бесплатно)</div>
+            <button style="width:100%; font-size:12px;" onclick="selectMusic('default')">ВКЛЮЧИТЬ</button>
+        </div>
+        <div class="shop-item">
+            <div>🎵 Cyberpunk Electro (500 🪙)</div>
+            <button style="width:100%; font-size:12px;" id="trackBtn1" onclick="buyMusic('cyber', 500)">КУПИТЬ</button>
+        </div>
+    </div>
+    <button onclick="changeScreen('musicScreen', 'menuScreen')">НАЗАД В МЕНЮ</button>
+</div>
+
+<!-- 4. ЭКРАН ПРОИГРЫША -->
 <div class="screen" id="overScreen">
     <h1>ГЕЙМ ОВЕР</h1>
-    <p id="finalScore" style="font-size: 24px; color: #00f3ff; margin-bottom: 20px; font-weight: bold;"></p>
-    <button class="ad-btn" id="reviveBtn" onclick="watchAd()">ВТОРАЯ ЖИЗНЬ ЗА РЕКЛАМУ</button>
-    <button onclick="resetGame()">В ГЛАВНОЕ МЕНЮ</button>
+    <p id="finalScore" style="font-size: 20px; color: #00f3ff; font-weight: bold;"></p>
+    <p id="prizeText" style="font-size: 16px; color: #fffb00; font-weight: bold;"></p>
+    <button class="ad-btn" id="reviveBtn" onclick="watchReviveAd()">ВТОРАЯ ЖИЗНЬ ЗА РЕКЛАМУ</button>
+    <button onclick="changeScreen('overScreen', 'menuScreen')">В ГЛАВНОЕ МЕНЮ</button>
 </div>
 
-<!-- Игровое поле -->
 <canvas id="gameCanvas"></canvas>
+<audio id="bgMusic" loop></audio>
 
 <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Подстройка размеров поля под размеры экрана смартфона/ПК
-    canvas.width = Math.min(window.innerWidth, 450);
-    canvas.height = Math.min(window.innerHeight, 650);
+    canvas.width = Math.min(window.innerWidth, 430);
+    canvas.height = Math.min(window.innerHeight, 600);
 
-    // Основные переменные состояния игры
-    let score = 0;
-    let gameActive = false;
-    let isRevived = false; // Была ли уже использована реклама за этот забег
-    let obstacles = [];
-    let frame = 0;
-    let speed = 4.5;
+    let playerCoins = 0;
+    let musicAdsWatched = 0;
+    let unlockedSkins = ['cube'];
+    let unlockedBgs = ['default'];
+    let unlockedMusic = ['default'];
+    
+    let currentSkin = 'cube';
+    let currentBg = 'default';
+    let currentMusic = 'default';
 
-    // Параметры главного героя (Неонового куба)
-    const player = {
-        x: 50,
-        y: canvas.height - 80,
-        w: 35,
-        h: 45,
-        dy: 0,
-        gravity: 0.65,
-        jumpForce: -13,
-        grounded: true
-    };
+    let score = 0, gameActive = false, isRevived = false;
+    let obstacles = [], frame = 0, speed = 4.5;
 
-    // Функция запуска
+    const playerObj = { x: 60, y: canvas.height - 80, w: 35, h: 45, dy: 0, gravity: 0.65, jumpForce: -13, grounded: true };
+
+    function changeScreen(from, to) {
+        document.getElementById(from).classList.remove("active");
+        if(to === 'game') {
+            document.getElementById("uiPanel").style.display = "flex";
+            startGame();
+        } else {
+            document.getElementById("uiPanel").style.display = "none";
+            document.getElementById(to).classList.add("active");
+            document.getElementById("menuCoins").innerText = playerCoins;
+        }
+    }
+
     function startGame() {
-        document.getElementById("startScreen").classList.remove("active");
+        score = 0; speed = 4.5; obstacles = []; isRevived = false; frame = 0;
+        playerObj.y = canvas.height - 80; playerObj.dy = 0;
+        document.getElementById("reviveBtn").style.display = "inline-block";
         gameActive = true;
         animate();
     }
 
-    // Управление прыжком: Пробел на ПК и Тап на смартфонах
     window.addEventListener("keydown", (e) => { if(e.code === "Space") jump(); });
     window.addEventListener("touchstart", () => { jump(); });
 
-    function jump() {
-        if(player.grounded && gameActive) {
-            player.dy = player.jumpForce;
-            player.grounded = false;
-        }
-    }
+    function jump() { if(playerObj.grounded && gameActive) { playerObj.dy = playerObj.jumpForce; playerObj.grounded = false; } }
 
-    // Генерация препятствий (Красных лазеров) случайной высоты
     function spawnObstacle() {
-        if (frame % 100 === 0) {
-            let height = Math.random() * 35 + 25;
-            obstacles.push({
-                x: canvas.width,
-                y: canvas.height - height - 30, // Учитываем линию пола
-                w: 22,
-                h: height
-            });
+        if (frame % 95 === 0) {
+            let h = Math.random() * 35 + 25;
+            obstacles.push({ x: canvas.width, y: canvas.height - h - 30, w: 22, h: h });
         }
     }
 
-    // Главный игровой цикл отрисовки и физики
     function animate() {
         if (!gameActive) return;
-        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        frame++;
-        score++;
+        frame++; score++;
         document.getElementById("scoreDiv").innerText = "SCORE: " + score;
+        document.getElementById("coinDiv").innerText = "🪙: " + playerCoins;
 
-        // Отрисовка неоновой линии пола
-        ctx.strokeStyle = "#00f3ff";
-        ctx.lineWidth = 4;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = "#00f3ff";
-        ctx.beginPath();
-        ctx.moveTo(0, canvas.height - 30);
-        ctx.lineTo(canvas.width, canvas.height - 30);
-        ctx.stroke();
-
-        // Физика и отрисовка игрока
-        player.dy += player.gravity;
-        player.y += player.dy;
-
-        // Проверка приземления на пол
-        if(player.y > canvas.height - 75) {
-            player.y = canvas.height - 75;
-            player.dy = 0;
-            player.grounded = true;
+        if(currentBg === 'space') {
+            ctx.fillStyle = "#020210"; ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = "#fff"; for(let i=0; i<15; i++) ctx.fillRect((i*37)%canvas.width, (i*59)%canvas.height, 2, 2);
+        } else {
+            ctx.fillStyle = "#0d0e15"; ctx.fillRect(0,0,canvas.width,canvas.height);
         }
 
-        // Рисуем светящегося игрока
-        ctx.fillStyle = "#00f3ff";
+        ctx.strokeStyle = "#00f3ff"; ctx.lineWidth = 4; ctx.shadowBlur = 10; ctx.shadowColor = "#00f3ff";
+        ctx.beginPath(); ctx.moveTo(0, canvas.height - 30); ctx.lineTo(canvas.width, canvas.height - 30); ctx.stroke();
+
+        playerObj.dy += playerObj.gravity; playerObj.y += playerObj.dy;
+        if(playerObj.y > canvas.height - 75) { playerObj.y = canvas.height - 75; playerObj.dy = 0; playerObj.grounded = true; }
+
         ctx.shadowBlur = 15;
-        ctx.shadowColor = "#00f3ff";
-        ctx.fillRect(player.x, player.y, player.w, player.h);
+        if(currentSkin === 'robot') {
+            ctx.fillStyle = "#a1ffc5"; ctx.shadowColor = "#a1ffc5";
+            ctx.fillRect(playerObj.x, playerObj.y, playerObj.w, playerObj.h);
+            ctx.fillStyle = "#000"; ctx.fillRect(playerObj.x+8, playerObj.y+10, 6, 6); ctx.fillRect(playerObj.x+20, playerObj.y+10, 6, 6);
+        } else if(currentSkin === 'bunny') {
+            ctx.fillStyle = "#ffbbf4"; ctx.shadowColor = "#ffbbf4";
+            ctx.fillRect(playerObj.x, playerObj.y, playerObj.w, playerObj.h);
+            ctx.fillRect(playerObj.x+5, playerObj.y-15, 8, 15); ctx.fillRect(playerObj.x+22, playerObj.y-15, 8, 15);
+        } else {
+            ctx.fillStyle = "#00f3ff"; ctx.shadowColor = "#00f3ff";
+            ctx.fillRect(playerObj.x, playerObj.y, playerObj.w, playerObj.h);
+        }
 
-        // Движение и отрисовка препятствий
         spawnObstacle();
-        ctx.shadowColor = "#ff007f";
-        ctx.fillStyle = "#ff007f";
-        
+        ctx.shadowColor = "#ff007f"; ctx.fillStyle = "#ff007f";
         for(let i = obstacles.length - 1; i >= 0; i--) {
-            let o = obstacles[i];
-            o.x -= speed;
+            let o = obstacles[i]; o.x -= speed;
             ctx.fillRect(o.x, o.y, o.w, o.h);
-
-            // Проверка столкновения куба с лазером
-            if(player.x < o.x + o.w && 
-               player.x + player.w > o.x && 
-               player.y < o.y + o.h && 
-               player.y + player.h > o.y) {
+            if(playerObj.x < o.x + o.w && playerObj.x + playerObj.w > o.x && playerObj.y < o.y + o.h && playerObj.y + playerObj.h > o.y) {
                 gameOver();
             }
-
-            // Удаляем лазеры, улетевшие за левый край экрана
-            if(o.x + o.w < 0) {
-                obstacles.splice(i, 1);
-            }
+            if(o.x + o.w < 0) obstacles.splice(i, 1);
         }
-        
-        // Отключаем тени для оптимизации производительности
-        ctx.shadowBlur = 0;
-        
-        // Постепенное увеличение скорости с ходом времени
-        speed += 0.0015;
-        
+        ctx.shadowBlur = 0; speed += 0.0015;
         requestAnimationFrame(animate);
     }
 
-    // Экран проигрыша
     function gameOver() {
         gameActive = false;
-        document.getElementById("finalScore").innerText = "Ваш рекорд: " + score;
-        document.getElementById("overScreen").classList.add("active");
-        
-        // Если игрок уже восстанавливался за рекламу, прячем кнопку рекламы
-        if (isRevived) {
-            document.getElementById("reviveBtn").style.display = "none";
-        }
-    }
-
-    // Логика работы кнопки рекламы
-    function watchAd() {
-        alert("Запуск встроенной рекламы... Пожалуйста, подождите 15 секунд.");
-        
-        // Эмуляция просмотра рекламы перед интеграцией Adsgram SDK
-        setTimeout(() => {
-            document.getElementById("overScreen").classList.remove("active");
-            gameActive = true;
-            isRevived = true;
-            obstacles = []; // Стираем старые лазеры, чтобы дать игроку фору
-            animate();
-            alert("Реклама просмотрена! Бежим дальше с того же места!");
-        }, 2000); // 2 секунды для быстрой симуляции при тесте
-    }
-
-    // Сброс всех параметров к начальным при перезапуске
-    function resetGame() {
-        score = 0;
-        speed = 4.5;
-        obstacles = [];
-        isRevived = false;
-        document.getElementById("reviveBtn").style.display = "inline-block";
-        document.getElementById("overScreen").classList.remove("active");
-        document.getElementById("startScreen").classList.add("active");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-</script>
-</body>
-</html>
+        document.getElementById("uiPanel").style.display = "none";
