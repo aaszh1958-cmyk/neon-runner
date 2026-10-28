@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
+    <title>Cyber Neon Runner</title>
+    <style>
+        /* Полный сброс отступов и настройка футуристичного фона */
+        body { 
+            margin: 0; 
+            background: #05050a; 
+            overflow: hidden; 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            color: #fff; 
+        }
+        
+        /* Стилизация игрового холста под неоновый автомат */
+        #gameCanvas { 
+            display: block; 
+            margin: 0 auto; 
+            background: #0d0e15; 
+            box-shadow: 0 0 20px #00f3ff; 
+        }
+        
+        /* Счётчик очков во время игры */
+        .ui { 
+            position: absolute; 
+            top: 20px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            font-size: 28px; 
+            font-weight: bold; 
+            text-shadow: 0 0 10px #00f3ff; 
+            letter-spacing: 2px;
+        }
+        
+        /* Общие стили для экранов Старта и Проигрыша */
+        .screen { 
+            display: none; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(5, 5, 10, 0.85); 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        
+        /* Класс для включения видимости экранов */
+        .active { 
+            display: flex; 
+        }
+        
+        /* Неоновые заголовки */
+        h1 { 
+            font-size: 36px; 
+            text-shadow: 0 0 15px #ff007f; 
+            margin-bottom: 30px; 
+            letter-spacing: 3px;
+            text-align: center;
+        }
+        
+        /* Киберпанк-кнопки */
+        button { 
+            background: transparent; 
+            border: 2px solid #00f3ff; 
+            color: #00f3ff; 
+            padding: 14px 35px; 
+            font-size: 18px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-shadow: 0 0 5px #00f3ff; 
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); 
+            transition: 0.2s ease; 
+            margin: 10px; 
+            font-weight: bold;
+        }
+        
+        button:hover { 
+            background: #00f3ff; 
+            color: #05050a; 
+            box-shadow: 0 0 25px #00f3ff; 
+        }
+        
+        /* Особая кнопка для просмотра рекламы */
+        .ad-btn { 
+            border-color: #ff007f; 
+            color: #ff007f; 
+            text-shadow: 0 0 5px #ff007f; 
+        }
+        
+        .ad-btn:hover { 
+            background: #ff007f; 
+            color: #fff; 
+            box-shadow: 0 0 25px #ff007f; 
+        }
+    </style>
+</head>
+<body>
+
+<!-- Игровой интерфейс с очками -->
+<div class="ui" id="scoreDiv">SCORE: 0</div>
+
+<!-- Стартовое меню игры -->
+<div class="screen active" id="startScreen">
+    <h1>CYBER NEON RUNNER</h1>
+    <button onclick="startGame()">НАЧАТЬ ИГРУ</button>
+</div>
+
+<!-- Экран конца игры (Game Over) -->
+<div class="screen" id="overScreen">
+    <h1>ГЕЙМ ОВЕР</h1>
+    <p id="finalScore" style="font-size: 24px; color: #00f3ff; margin-bottom: 20px; font-weight: bold;"></p>
+    <button class="ad-btn" id="reviveBtn" onclick="watchAd()">ВТОРАЯ ЖИЗНЬ ЗА РЕКЛАМУ</button>
+    <button onclick="resetGame()">В ГЛАВНОЕ МЕНЮ</button>
+</div>
+
+<!-- Игровое поле -->
+<canvas id="gameCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Подстройка размеров поля под размеры экрана смартфона/ПК
+    canvas.width = Math.min(window.innerWidth, 450);
+    canvas.height = Math.min(window.innerHeight, 650);
+
+    // Основные переменные состояния игры
+    let score = 0;
+    let gameActive = false;
+    let isRevived = false; // Была ли уже использована реклама за этот забег
+    let obstacles = [];
+    let frame = 0;
+    let speed = 4.5;
+
+    // Параметры главного героя (Неонового куба)
+    const player = {
+        x: 50,
+        y: canvas.height - 80,
+        w: 35,
+        h: 45,
+        dy: 0,
+        gravity: 0.65,
+        jumpForce: -13,
+        grounded: true
+    };
+
+    // Функция запуска
+    function startGame() {
+        document.getElementById("startScreen").classList.remove("active");
+        gameActive = true;
+        animate();
+    }
+
+    // Управление прыжком: Пробел на ПК и Тап на смартфонах
+    window.addEventListener("keydown", (e) => { if(e.code === "Space") jump(); });
+    window.addEventListener("touchstart", () => { jump(); });
+
+    function jump() {
+        if(player.grounded && gameActive) {
+            player.dy = player.jumpForce;
+            player.grounded = false;
+        }
+    }
+
+    // Генерация препятствий (Красных лазеров) случайной высоты
+    function spawnObstacle() {
+        if (frame % 100 === 0) {
+            let height = Math.random() * 35 + 25;
+            obstacles.push({
+                x: canvas.width,
+                y: canvas.height - height - 30, // Учитываем линию пола
+                w: 22,
+                h: height
+            });
+        }
+    }
+
+    // Главный игровой цикл отрисовки и физики
+    function animate() {
+        if (!gameActive) return;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        frame++;
+        score++;
+        document.getElementById("scoreDiv").innerText = "SCORE: " + score;
+
+        // Отрисовка неоновой линии пола
+        ctx.strokeStyle = "#00f3ff";
+        ctx.lineWidth = 4;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = "#00f3ff";
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height - 30);
+        ctx.lineTo(canvas.width, canvas.height - 30);
+        ctx.stroke();
+
+        // Физика и отрисовка игрока
+        player.dy += player.gravity;
+        player.y += player.dy;
+
+        // Проверка приземления на пол
+        if(player.y > canvas.height - 75) {
+            player.y = canvas.height - 75;
+            player.dy = 0;
+            player.grounded = true;
+        }
+
+        // Рисуем светящегося игрока
+        ctx.fillStyle = "#00f3ff";
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "#00f3ff";
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+
+        // Движение и отрисовка препятствий
+        spawnObstacle();
+        ctx.shadowColor = "#ff007f";
+        ctx.fillStyle = "#ff007f";
+        
+        for(let i = obstacles.length - 1; i >= 0; i--) {
+            let o = obstacles[i];
+            o.x -= speed;
+            ctx.fillRect(o.x, o.y, o.w, o.h);
+
+            // Проверка столкновения куба с лазером
+            if(player.x < o.x + o.w && 
+               player.x + player.w > o.x && 
+               player.y < o.y + o.h && 
+               player.y + player.h > o.y) {
+                gameOver();
+            }
+
+            // Удаляем лазеры, улетевшие за левый край экрана
+            if(o.x + o.w < 0) {
+                obstacles.splice(i, 1);
+            }
+        }
+        
+        // Отключаем тени для оптимизации производительности
+        ctx.shadowBlur = 0;
+        
+        // Постепенное увеличение скорости с ходом времени
+        speed += 0.0015;
+        
+        requestAnimationFrame(animate);
+    }
+
+    // Экран проигрыша
+    function gameOver() {
+        gameActive = false;
+        document.getElementById("finalScore").innerText = "Ваш рекорд: " + score;
+        document.getElementById("overScreen").classList.add("active");
+        
+        // Если игрок уже восстанавливался за рекламу, прячем кнопку рекламы
+        if (isRevived) {
+            document.getElementById("reviveBtn").style.display = "none";
+        }
+    }
+
+    // Логика работы кнопки рекламы
+    function watchAd() {
+        alert("Запуск встроенной рекламы... Пожалуйста, подождите 15 секунд.");
+        
+        // Эмуляция просмотра рекламы перед интеграцией Adsgram SDK
+        setTimeout(() => {
+            document.getElementById("overScreen").classList.remove("active");
+            gameActive = true;
+            isRevived = true;
+            obstacles = []; // Стираем старые лазеры, чтобы дать игроку фору
+            animate();
+            alert("Реклама просмотрена! Бежим дальше с того же места!");
+        }, 2000); // 2 секунды для быстрой симуляции при тесте
+    }
+
+    // Сброс всех параметров к начальным при перезапуске
+    function resetGame() {
+        score = 0;
+        speed = 4.5;
+        obstacles = [];
+        isRevived = false;
+        document.getElementById("reviveBtn").style.display = "inline-block";
+        document.getElementById("overScreen").classList.remove("active");
+        document.getElementById("startScreen").classList.add("active");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+</script>
+</body>
+</html>
