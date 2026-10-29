@@ -22,10 +22,9 @@
             user-select: none; -webkit-user-select: none;
         }
 
-        /* Динамический фон с узорами */
         .bg-pattern {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -2; background-color: #ffd700; /* Стартовые желтые обои по ТЗ */
+            z-index: -2; background-color: #ffd700;
             transition: all 0.5s ease;
         }
         .bg-pattern.pattern-dots {
@@ -67,7 +66,6 @@
         .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
         .screen.active { display: flex !important; }
 
-        /* Кнопки меню */
         .menu-btn {
             width: 280px; padding: 14px; margin: 8px 0;
             background: #111; border: 2px solid var(--neon-cyan);
@@ -80,12 +78,10 @@
             box-shadow: 0 0 15px var(--neon-cyan) !important;
         }
 
-        /* Табы магазинов */
         .shop-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
         .tab-btn { padding: 8px 12px; background: #222; border: 1px solid #444; color: #fff; cursor: pointer; font-size: 12px; }
         .tab-btn.active { border-color: var(--neon-green); color: var(--neon-green); }
 
-        /* Сетка товаров */
         .items-grid {
             width: 100%; height: 260px; overflow-y: auto;
             display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -103,7 +99,6 @@
         .buy-btn { width: 100%; padding: 6px; background: #222; border: 1px solid #666; color: #fff; cursor: pointer; font-size: 11px; }
         .buy-btn.owned { background: #113311; border-color: green; }
 
-        /* Холст игры */
         canvas { background: #000; border: 2px solid #fff; max-width: 100%; height: auto; aspect-ratio: 75/40; }
         .game-info { display: flex; justify-content: space-between; width: 100%; margin-bottom: 5px; font-size: 14px; }
         .back-btn { margin-top: 15px; padding: 8px 20px; background: #222; border: 1px solid var(--neon-magenta); color: var(--neon-magenta); cursor: pointer; }
@@ -118,7 +113,7 @@
     <div class="bg-pattern" id="mainBgPattern"></div>
 
     <div class="window">
-        <!-- ГЛАВНОЕ МЕНЮ -->
+        <!-- МЕНЮ -->
         <div id="menuScreen" class="screen active">
             <h1>CYBER RUNNER EVO</h1>
             <div class="balance-text">Баланс: <span class="coins-val">0</span> Монет | Рекорд: <span id="recordVal">0</span></div>
@@ -128,7 +123,7 @@
             <button class="menu-btn" id="btn-settings">⚙️ Настройки</button>
         </div>
 
-        <!-- ИГРОВОЙ ЭКРАН -->
+        <!-- ИГРА -->
         <div id="gameScreen" class="screen">
             <div class="game-info">
                 <div>Счет: <span id="scoreVal">0</span></div>
@@ -151,7 +146,7 @@
             <button class="back-btn" id="btn-back-shop">Назад</button>
         </div>
 
-        <!-- МАГАЗИН МУЗЫКИ -->
+        <!-- МУЗЫКА -->
         <div id="musicScreen" class="screen">
             <h2>Магазин Музыки</h2>
             <div style="margin-bottom:10px; color:#aaa; font-size:12px;">Своя музыка — за 10 реклам!</div>
@@ -159,7 +154,7 @@
             <button class="back-btn" id="btn-back-music">Назад</button>
         </div>
 
-        <!-- НАСТРОЕК -->
+        <!-- НАСТРОЙКИ -->
         <div id="settingsScreen" class="screen">
             <h2>Настройки</h2>
             <div class="setting-row">
@@ -183,7 +178,6 @@
     </div>
 
     <script>
-        // Чистый JS без внешних блокирующих библиотек Telegram
         let state = {
             coins: 0, highscore: 0, claimedThresholds: [], autoMode: true, sound: true, gameSpeedModifier: 1.0,
             ownedSkins: ['yellow'], activeSkin: 'yellow',
@@ -192,14 +186,18 @@
             adCounts: { skins: {}, music: {} }, ownedMusic: [], activeMusic: null
         };
 
-        // Ключ базы данных изменен на v3, чтобы СБРОСИТЬ СТАРЫЙ СЛОМАННЫЙ КЭШ БРАУЗЕРА ГАРАНТИРОВАННО!
-        const SAVE_KEY = 'cyber_runner_state_v3';
-
+        const SAVE_KEY = 'cyber_runner_state_v4';
         if(localStorage.getItem(SAVE_KEY)) {
             try { state = Object.assign(state, JSON.parse(localStorage.getItem(SAVE_KEY))); } catch(e){}
         }
 
         function saveGame() { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); updateUI(); }
-        
         function updateUI() {
             document.querySelectorAll('.coins-val').forEach(el => el.innerText = state.coins);
+            document.getElementById('recordVal').innerText = state.highscore;
+        }
+
+        function changeScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if(screenId === 'shopScreen') loadShop('skins');
