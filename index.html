@@ -1,63 +1,72 @@
 <!DOCTYPE html>
 <html lang="ru">
- <head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Кубик — Runner</title>
+  
+  <!-- СКРИПТЫ ДЛЯ РЕКЛАМЫ И TELEGRAM -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-<title>Кубик — Runner</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:#111;color:#fff;user-select:none}
-  #gameCanvas{display:block;width:100vw;height:100vh;background:#f9e79f}
-  .overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;background:rgba(0,0,0,.9);z-index:10;overflow-y:auto}
-  .hidden{display:none!important}
-  h1{font-size:clamp(28px,6vw,48px);margin:15px 0;text-align:center;text-shadow:0 3px 8px #000}
-  h2{font-size:clamp(20px,4vw,32px);margin:10px 0}
-  button{padding:12px 20px;margin:6px;font-size:16px;border:none;border-radius:10px;background:#4a90e2;color:#fff;cursor:pointer;font-weight:600;transition:transform .1s,background .2s}
-  button:hover{transform:scale(1.05);background:#5aa0f2}
-  button:disabled{background:#555;cursor:not-allowed;transform:none}
-  button.small{font-size:12px;padding:7px 10px;margin:3px 0;width:100%}
-  button.orange{background:#e67e22}
-  button.orange:hover{background:#f39c12}
-  button.green{background:#27ae60}
-  button.green:hover{background:#2ecc71}
-  .shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;max-width:1000px;width:100%;margin:10px 0}
-  .shop-item{background:#2a2a2a;padding:8px;border-radius:10px;text-align:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.5);display:flex;flex-direction:column}
-  .shop-item .preview{height:60px;border-radius:6px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;border:2px solid #444;overflow:hidden;font-size:30px;position:relative}
-  .shop-item .preview canvas{max-width:100%;max-height:100%}
-  .shop-item .preview input[type=color]{width:100%;height:100%;border:none;padding:0;cursor:pointer;background:none}
-  .shop-item .item-name{font-weight:600;margin-bottom:4px;min-height:16px}
-  .tabs{display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:10px;max-width:1000px}
-  .tabs button{border-radius:10px;margin:4px;font-size:14px;padding:8px 14px}
-  .tabs button.active{background:#e67e22}
-  .top-bar{position:fixed;top:0;left:0;right:0;padding:10px 15px;display:flex;justify-content:space-between;z-index:5;pointer-events:none;font-size:18px;font-weight:700;text-shadow:0 2px 6px #000;gap:10px}
-  .top-bar .stat{background:rgba(0,0,0,.55);padding:8px 14px;border-radius:10px}
-  .settings-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;width:100%;max-width:520px;padding:12px;margin:6px 0;background:#2a2a2a;border-radius:10px;gap:10px}
-  .settings-row input[type=text]{padding:8px 12px;border-radius:8px;border:1px solid #555;background:#1a1a1a;color:#fff;flex:1;min-width:120px;font-size:14px}
-  .ad-overlay{position:fixed;inset:0;background:rgba(0,0,0,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;text-align:center}
-  .ad-overlay h2{font-size:clamp(24px,5vw,40px);margin-bottom:15px}
-  #adCountdown{font-size:64px;font-weight:900;color:#f1c40f;text-shadow:0 0 30px #f1c40f}
-  .hint{opacity:.7;font-size:14px;margin-top:10px}
 
-  .levels-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;max-width:700px;width:100%;margin:10px 0}
-  .level-btn{aspect-ratio:1;padding:8px;font-size:13px;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;line-height:1.2;background:#3a3a3a;border-radius:12px;cursor:pointer;border:2px solid #555;transition:transform .1s;color:#fff}
-  .level-btn:hover{transform:scale(1.05)}
-  .level-btn.locked{background:#1e1e1e;color:#666;cursor:not-allowed;border-color:#333}
-  .level-btn.locked:hover{transform:none}
-  .level-btn.completed{background:linear-gradient(135deg,#2ecc71,#27ae60);border-color:#2ecc71;color:#fff}
-  .level-btn .lvl-num{font-size:22px;font-weight:900}
-  .level-btn .lvl-tag{font-size:10px;opacity:.85;margin-top:2px}
-  .level-btn.simplified::after{content:'⭐';position:absolute;top:3px;right:5px;font-size:14px}
-  .play-top-btn{font-size:20px;padding:16px 44px;margin:10px 0 25px}
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:#111;color:#fff;user-select:none}
+    #gameCanvas{display:block;width:100vw;height:100vh;background:#f9e79f}
+    .overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;background:rgba(0,0,0,.9);z-index:10;overflow-y:auto}
+    .hidden{display:none!important}
+    h1{font-size:clamp(28px,6vw,48px);margin:15px 0;text-align:center;text-shadow:0 3px 8px #000}
+    h2{font-size:clamp(20px,4vw,32px);margin:10px 0}
+    button{padding:12px 20px;margin:6px;font-size:16px;border:none;border-radius:10px;background:#4a90e2;color:#fff;cursor:pointer;font-weight:600;transition:transform .1s,background .2s}
+    button:hover{transform:scale(1.05);background:#5aa0f2}
+    button:disabled{background:#555;cursor:not-allowed;transform:none}
+    button.small{font-size:12px;padding:7px 10px;margin:3px 0;width:100%}
+    button.orange{background:#e67e22}
+    button.orange:hover{background:#f39c12}
+    button.green{background:#27ae60}
+    button.green:hover{background:#2ecc71}
+    button.purple{background:#8e44ad}
+    button.purple:hover{background:#9b59b6}
+    
+    .shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;max-width:1000px;width:100%;margin:10px 0}
+    .shop-item{background:#2a2a2a;padding:8px;border-radius:10px;text-align:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.5);display:flex;flex-direction:column}
+    .shop-item .preview{height:60px;border-radius:6px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;border:2px solid #444;overflow:hidden;font-size:30px;position:relative}
+    .shop-item .preview canvas{max-width:100%;max-height:100%}
+    .shop-item .preview input[type=color]{width:100%;height:100%;border:none;padding:0;cursor:pointer;background:none}
+    .shop-item .item-name{font-weight:600;margin-bottom:4px;min-height:16px}
+    .tabs{display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:10px;max-width:1000px}
+    .tabs button{border-radius:10px;margin:4px;font-size:14px;padding:8px 14px}
+    .tabs button.active{background:#e67e22}
+    .top-bar{position:fixed;top:0;left:0;right:0;padding:10px 15px;display:flex;justify-content:space-between;z-index:5;pointer-events:none;font-size:18px;font-weight:700;text-shadow:0 2px 6px #000;gap:10px}
+    .top-bar .stat{background:rgba(0,0,0,.55);padding:8px 14px;border-radius:10px}
+    .settings-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;width:100%;max-width:520px;padding:12px;margin:6px 0;background:#2a2a2a;border-radius:10px;gap:10px}
+    .settings-row input[type=text]{padding:8px 12px;border-radius:8px;border:1px solid #555;background:#1a1a1a;color:#fff;flex:1;min-width:120px;font-size:14px}
+    .ad-overlay{position:fixed;inset:0;background:rgba(0,0,0,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;text-align:center}
+    .ad-overlay h2{font-size:clamp(24px,5vw,40px);margin-bottom:15px}
+    #adCountdown{font-size:64px;font-weight:900;color:#f1c40f;text-shadow:0 0 30px #f1c40f}
+    .hint{opacity:.7;font-size:14px;margin-top:10px}
 
-  #levelBar{position:fixed;top:70px;left:50%;transform:translateX(-50%);width:60%;max-width:500px;height:18px;background:rgba(0,0,0,.5);border-radius:10px;overflow:hidden;z-index:6;display:none;border:2px solid rgba(255,255,255,.3)}
-  #levelBar.on{display:block}
-  #levelBarFill{height:100%;width:0;background:linear-gradient(90deg,#6ee7ff,#a78bfa);transition:width .1s linear}
-  #levelBarText{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;text-shadow:0 1px 3px #000}
+    .levels-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;max-width:700px;width:100%;margin:10px 0}
+    .level-btn{aspect-ratio:1;padding:8px;font-size:13px;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;line-height:1.2;background:#3a3a3a;border-radius:12px;cursor:pointer;border:2px solid #555;transition:transform .1s;color:#fff}
+    .level-btn:hover{transform:scale(1.05)}
+    .level-btn.locked{background:#1e1e1e;color:#666;cursor:not-allowed;border-color:#333}
+    .level-btn.locked:hover{transform:none}
+    .level-btn.completed{background:linear-gradient(135deg,#2ecc71,#27ae60);border-color:#2ecc71;color:#fff}
+    .level-btn .lvl-num{font-size:22px;font-weight:900}
+    .level-btn .lvl-tag{font-size:10px;opacity:.85;margin-top:2px}
+    .level-btn.simplified::after{content:'⭐';position:absolute;top:3px;right:5px;font-size:14px}
+    .play-top-btn{font-size:20px;padding:16px 44px;margin:10px 0 25px}
 
-  #levelIndexList{font-size:12px;line-height:1.7;color:#ddd}
-  #levelIndexList .lvl-row{display:flex;justify-content:space-between;padding:1px 0}
-  #levelIndexList .lvl-done{color:#2ecc71}
-  #levelIndexList .lvl-lock{color:#666}
-</style>
+    #levelBar{position:fixed;top:70px;left:50%;transform:translateX(-50%);width:60%;max-width:500px;height:18px;background:rgba(0,0,0,.5);border-radius:10px;overflow:hidden;z-index:6;display:none;border:2px solid rgba(255,255,255,.3)}
+    #levelBar.on{display:block}
+    #levelBarFill{height:100%;width:0;background:linear-gradient(90deg,#6ee7ff,#a78bfa);transition:width .1s linear}
+    #levelBarText{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;text-shadow:0 1px 3px #000}
+
+    #levelIndexList{font-size:12px;line-height:1.7;color:#ddd}
+    #levelIndexList .lvl-row{display:flex;justify-content:space-between;padding:1px 0}
+    #levelIndexList .lvl-done{color:#2ecc71}
+    #levelIndexList .lvl-lock{color:#666}
+  </style>
 </head>
 <body>
 
@@ -74,9 +83,12 @@
   <h1>🟦 Кубик 🟦</h1>
   <p style="font-size:20px;margin:6px">Рекорд: <b id="menuRecord">0</b></p>
   <p style="font-size:20px;margin:6px">🪙 Токены: <b id="menuTokens">0</b></p>
+  
   <button onclick="openPlaySelect()">▶ Играть</button>
   <button onclick="openShop()">🛒 Магазин</button>
   <button onclick="openSettings()">⚙ Настройки</button>
+  <button class="purple" onclick="inviteFriend()" id="btnInvite">👥 Пригласить друга (+500 000)</button>
+  
   <p class="hint">Пробел / клик / тап — прыжок</p>
 </div>
 
@@ -88,6 +100,20 @@
   <p class="hint" style="margin-bottom:8px">В уровнях отключены двойной прыжок и ускорение. За прохождение — 100 000 🪙</p>
   <div class="levels-grid" id="levelsGrid"></div>
   <button onclick="showMenu()">← Назад</button>
+</div>
+
+<!-- ЭКРАН ВОЗРОЖДЕНИЯ -->
+<div class="overlay hidden" id="reviveScreen">
+  <h1>💀 Ты разбился!</h1>
+  <p style="font-size:20px;margin:10px">Но у тебя есть шанс продолжить!</p>
+  
+  <button class="play-top-btn green" onclick="revivePlayer()" style="margin-top: 20px;">
+    📺 Возродиться (Реклама)
+  </button>
+  
+  <button onclick="giveUp()" style="background:#444; margin-top:15px; width: 200px;">
+    ❌ Сдаться и выйти
+  </button>
 </div>
 
 <!-- КОНЕЦ -->
@@ -157,11 +183,10 @@
   <button onclick="showMenu()" style="margin-top:20px">← Назад</button>
 </div>
 
-<!-- РЕКЛАМА -->
+<!-- РЕКЛАМА (Заглушка, так как AdsGram показывает свою) -->
 <div class="ad-overlay hidden" id="adOverlay">
-  <h2>📺 Реклама</h2>
+  <h2>📺 Загрузка рекламы...</h2>
   <div id="adCountdown">0</div>
-  <p>Подождите...</p>
 </div>
 
 <script>
@@ -223,7 +248,6 @@ const VITRINA = [
 
 const MILESTONES = [10000,20000,30000,40000,50000,60000,70000,80000,90000,100000];
 
-/* УРОВНИ — сложность растёт, типы препятствий меняются */
 const LEVELS = [
   {name:'Уровень 1',  time:20, spawn:120, speedBase:5.5, maxGroup:1, types:['basic']},
   {name:'Уровень 2',  time:22, spawn:110, speedBase:6,   maxGroup:1, types:['basic']},
@@ -261,6 +285,8 @@ const state = {
   speedUnlocked: false,
   doubleJumpUnlocked: false,
   promoUsed: false,
+  claimedReferral: false, // Для приглашения друга
+  
   ownedColors:      [true,false,false,false,false,false,false,false,false,false,false],
   ownedBackgrounds: [true,false,false,false,false,false,false,false,false,false,false],
   ownedObstacles:   [true,false,false,false,false,false,false,false,false,false,false],
@@ -288,6 +314,8 @@ const state = {
   autoTriggered: false,
   prevColor: 0, prevBg: 0, prevObs: 0,
   frameId: null,
+  
+  canRevive: true // Флаг для возрождения
 };
 
 /* ============================================================
@@ -295,7 +323,7 @@ const state = {
    ============================================================ */
 function saveGame() {
   try {
-    localStorage.setItem('cubeGameV6', JSON.stringify({
+    localStorage.setItem('cubeGameV7', JSON.stringify({
       tokens: state.tokens, record: state.record,
       ownedColors: state.ownedColors, ownedBackgrounds: state.ownedBackgrounds,
       ownedObstacles: state.ownedObstacles, ownedMusic: state.ownedMusic,
@@ -308,13 +336,14 @@ function saveGame() {
       speedMultiplier: state.speedMultiplier, autoMode: state.autoMode,
       soundOn: state.soundOn, promoUsed: state.promoUsed,
       levelsCompleted: state.levelsCompleted, levelSimplified: state.levelSimplified,
+      claimedReferral: state.claimedReferral
     }));
   } catch(e) {}
 }
 
 function loadGame() {
   try {
-    const s = JSON.parse(localStorage.getItem('cubeGameV6'));
+    const s = JSON.parse(localStorage.getItem('cubeGameV7'));
     if (!s) return;
     Object.assign(state, s);
     const fix = (arr, len) => {
@@ -337,10 +366,16 @@ function loadGame() {
 }
 
 /* ============================================================
-   CANVAS
+   CANVAS + TELEGRAM + ADSGRAM
    ============================================================ */
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+
+// Инициализация Telegram WebApp (для корректного отображения)
+if (window.Telegram && window.Telegram.WebApp) {
+  window.Telegram.WebApp.ready();
+  window.Telegram.WebApp.expand();
+}
 
 function resize() {
   const w = window.innerWidth || document.documentElement.clientWidth || 960;
@@ -358,6 +393,73 @@ window.addEventListener('resize', () => {
   }
 });
 resize();
+
+// === ADSGRAM РЕАЛЬНАЯ РЕКЛАМА ===
+let adInProgress = false;
+
+function showAd(count, callback) {
+  if (adInProgress) return;
+
+  // Проверяем, загрузился ли SDK
+  if (typeof window.Adsgram === 'undefined') {
+    alert('Реклама временно недоступна. Попробуйте позже.');
+    return;
+  }
+
+  adInProgress = true;
+
+  // Вставляем ТВОЙ ID (56695)
+  const AdController = window.Adsgram.init({ blockId: "56695" });
+
+  AdController.show()
+    .then((result) => {
+      // Реклама досмотрена до конца — выдаем награду
+      console.log('✅ Реклама просмотрена', result);
+      adInProgress = false;
+      callback(); 
+    })
+    .catch((result) => {
+      // Реклама закрыта раньше времени
+      console.log('❌ Реклама не досмотрена:', result);
+      adInProgress = false;
+      alert('Чтобы получить награду, нужно досмотреть рекламу до конца.');
+    });
+}
+
+/* ============================================================
+   ПРИГЛАШЕНИЕ ДРУГА (500 000 токенов)
+   ============================================================ */
+function inviteFriend() {
+  if (state.claimedReferral) {
+    alert('Ты уже получал награду за приглашение друга!');
+    return;
+  }
+  
+  const botLink = 'https://t.me/neon_cube_2026_bot';
+  const text = 'Играй в крутой раннер Кубик Неон! 🟦';
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(text)}`;
+
+  // Открываем окно "Поделиться" в Telegram
+  if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.openTelegramLink(shareUrl);
+  } else {
+    window.open(shareUrl, '_blank');
+  }
+
+  // Начисляем награду
+  state.tokens += 500000;
+  state.claimedReferral = true;
+  saveGame();
+  document.getElementById('menuTokens').textContent = state.tokens;
+  
+  // Блокируем кнопку
+  const btn = document.getElementById('btnInvite');
+  btn.textContent = '✓ Друг приглашен (+500 000)';
+  btn.disabled = true;
+  btn.style.background = '#555';
+
+  alert('🎉 Спасибо за приглашение! Тебе начислено 500 000 🪙!');
+}
 
 /* ============================================================
    ЗВУК
@@ -381,7 +483,7 @@ function playSound(freq, dur, type) {
 }
 
 /* ============================================================
-   УЗОРЫ (современные)
+   УЗОРЫ
    ============================================================ */
 function paintPattern(c, W, H, pattern, animated) {
   if (!pattern || pattern === 'none') return;
@@ -616,6 +718,7 @@ function rightmostObstacleX() {
    ============================================================ */
 function startGame(mode, levelIndex) {
   resize();
+  state.canRevive = true; // Даем возможность возродиться
 
   state.gameMode = mode || 'endless';
   state.currentLevel = (mode === 'level' && levelIndex !== undefined) ? levelIndex : -1;
@@ -739,7 +842,6 @@ function spawnEndless() {
 function spawnGroupLevel() {
   const cfg = getLevelConfig(state.currentLevel);
   const jumpDist = computeJumpDist(cfg.speedBase);
-
   const count = 1 + Math.floor(Math.random() * cfg.maxGroup);
 
   let x = canvas.width + 60;
@@ -748,17 +850,13 @@ function spawnGroupLevel() {
 
   for (let i = 0; i < count; i++) {
     let type = cfg.types[Math.floor(Math.random() * cfg.types.length)];
-
-    // Нельзя ставить ceiling сразу после wide (игрок будет в воздухе)
     const last = state.obstacles[state.obstacles.length - 1];
     if (last && last.kind === 'wide' && type === 'ceiling') {
       type = 'basic';
     }
-
     const obs = spawnTypedObstacle(type, x);
     if (!obs) continue;
     state.obstacles.push(obs);
-
     const safety = (type === 'wide' || type === 'ceiling' || type === 'moving' || type === 'spike') ? 2.4 : 1.4;
     x = obs.x + obs.w + jumpDist * safety + 40 + Math.random() * 50;
   }
@@ -777,7 +875,6 @@ function update(dt, rawDt) {
     state.groundY = canvas.height - 80;
   }
 
-  // Обновляем движущиеся препятствия
   for (const o of state.obstacles) {
     if (o.kind === 'moving') {
       const phaseVal = 0.5 + 0.5 * Math.sin(state.gameTime * 2 + o.phase);
@@ -803,7 +900,6 @@ function update(dt, rawDt) {
     state.speed = 5 + Math.min(10, state.score / 8000);
   }
 
-  // Физика
   p.vy += 0.75 * dt;
   p.y += p.vy * dt;
   if (p.y >= state.groundY - p.size) {
@@ -813,7 +909,6 @@ function update(dt, rawDt) {
     p.jumpsLeft = (state.gameMode === 'level' || !state.doubleJumpUnlocked) ? 1 : 2;
   }
 
-  // Спавн
   if (state.gameMode === 'level') {
     const cfg = getLevelConfig(state.currentLevel);
     state.framesSinceSpawn += dt;
@@ -830,7 +925,6 @@ function update(dt, rawDt) {
     }
   }
 
-  // Движение
   for (let i = state.obstacles.length - 1; i >= 0; i--) {
     const o = state.obstacles[i];
     o.x -= state.speed * dt;
@@ -840,11 +934,18 @@ function update(dt, rawDt) {
     }
   }
 
-  // Столкновения (общий AABB)
+  // СТОЛКНОВЕНИЯ
   for (const o of state.obstacles) {
     if (p.x + p.size > o.x && p.x < o.x + o.w &&
         p.y + p.size > o.y && p.y < o.y + o.h) {
-      gameOver();
+      
+      // Вместо смерти проверяем, можно ли возродиться
+      if (state.canRevive) {
+        state.screen = 'revive'; 
+        document.getElementById('reviveScreen').classList.remove('hidden');
+      } else {
+        gameOver(); 
+      }
       return;
     }
   }
@@ -883,8 +984,34 @@ function updateHUD() {
 }
 
 /* ============================================================
-   КОНЕЦ / ПРОХОЖДЕНИЕ
+   ВОЗРОЖДЕНИЕ И КОНЕЦ
    ============================================================ */
+function revivePlayer() {
+  document.getElementById('reviveScreen').classList.add('hidden');
+  
+  // Показываем рекламу
+  showAd(1, () => {
+    state.canRevive = false; // Блокируем повторное возрождение
+    state.screen = 'game';   // Возвращаем игру
+    
+    // Очищаем препятствия впереди
+    state.obstacles = state.obstacles.filter(o => o.x > state.player.x + 300);
+    
+    // Телепортируем кубик повыше, чтобы не умереть сразу
+    state.player.y = state.groundY - state.player.size - 200; 
+    state.player.vy = 0;
+    
+    state.lastTime = performance.now();
+    if (state.frameId) cancelAnimationFrame(state.frameId);
+    state.frameId = requestAnimationFrame(loop);
+  });
+}
+
+function giveUp() {
+  document.getElementById('reviveScreen').classList.add('hidden');
+  gameOver();
+}
+
 function gameOver() {
   state.screen = 'gameover';
   playSound(120, 0.4);
@@ -1097,10 +1224,8 @@ function render() {
 
 function drawObstacle(o, os) {
   if (o.kind === 'ceiling') {
-    // Блок сверху
     ctx.fillStyle = os.fill;
     ctx.fillRect(o.x, o.y, o.w, o.h);
-
     ctx.save();
     ctx.shadowColor = os.glow;
     ctx.shadowBlur = 16;
@@ -1108,14 +1233,11 @@ function drawObstacle(o, os) {
     ctx.lineWidth = 2.5;
     ctx.strokeRect(o.x, o.y, o.w, o.h);
     ctx.restore();
-
-    // Предупреждающая полоса снизу
     const stripeH = 8;
     for (let i = 0; i < o.w; i += 20) {
       ctx.fillStyle = (Math.floor(i / 20) % 2 === 0) ? '#ffdd00' : '#ff2222';
       ctx.fillRect(o.x + i, o.y + o.h - stripeH, Math.min(20, o.w - i), stripeH);
     }
-    // Тонкая линия по центру
     ctx.strokeStyle = 'rgba(255,80,80,0.5)';
     ctx.lineWidth = 1;
     ctx.strokeRect(o.x + 5, o.y + 5, o.w - 10, o.h - 10);
@@ -1123,7 +1245,6 @@ function drawObstacle(o, os) {
   }
 
   if (o.kind === 'spike') {
-    // Треугольник
     ctx.fillStyle = os.fill;
     ctx.beginPath();
     ctx.moveTo(o.x, o.y + o.h);
@@ -1131,7 +1252,6 @@ function drawObstacle(o, os) {
     ctx.lineTo(o.x + o.w, o.y + o.h);
     ctx.closePath();
     ctx.fill();
-
     ctx.save();
     ctx.shadowColor = os.glow;
     ctx.shadowBlur = 14;
@@ -1143,7 +1263,6 @@ function drawObstacle(o, os) {
   }
 
   if (o.kind === 'moving') {
-    // Направляющая линии (где может быть)
     ctx.strokeStyle = 'rgba(255,120,120,0.35)';
     ctx.setLineDash([5, 5]);
     ctx.lineWidth = 1;
@@ -1158,10 +1277,8 @@ function drawObstacle(o, os) {
     ctx.setLineDash([]);
   }
 
-  // Обычные (basic, wide, moving)
   ctx.fillStyle = os.fill;
   ctx.fillRect(o.x, o.y, o.w, o.h);
-
   ctx.save();
   ctx.shadowColor = os.glow;
   ctx.shadowBlur = 14;
@@ -1169,13 +1286,10 @@ function drawObstacle(o, os) {
   ctx.lineWidth = 2.5;
   ctx.strokeRect(o.x, o.y, o.w, o.h);
   ctx.restore();
-
-  // Внутренняя подсветка
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';
   ctx.lineWidth = 1;
   ctx.strokeRect(o.x + 4, o.y + 4, o.w - 8, o.h - 8);
 
-  // Для wide рисуем «гору» поверх
   if (o.kind === 'wide') {
     ctx.strokeStyle = 'rgba(255,255,255,0.5)';
     ctx.lineWidth = 2;
@@ -1230,7 +1344,6 @@ function drawPlayer() {
   ctx.strokeStyle = '#000';
   ctx.lineWidth = 2;
   ctx.strokeRect(-p.size/2, -p.size/2, p.size, p.size);
-
   ctx.restore();
 }
 
@@ -1572,37 +1685,6 @@ function grantItem(category, index) {
 }
 
 /* ============================================================
-   РЕКЛАМА
-   ============================================================ */
-// === ADSGRAM РЕАЛЬНАЯ РЕКЛАМА ===
-let adInProgress = false;
-
-function showAd(count, callback) {
-  if (adInProgress) return;
-
-  if (typeof window.Adsgram === 'undefined') {
-    alert('Реклама временно недоступна. Попробуйте позже.');
-    return;
-  }
-
-  adInProgress = true;
-
-  const AdController = window.Adsgram.init({ blockId: "56695" });
-
-  AdController.show()
-    .then((result) => {
-      console.log('✅ Реклама просмотрена', result);
-      adInProgress = false;
-      callback(); 
-    })
-    .catch((result) => {
-      console.log('❌ Реклама не досмотрена:', result);
-      adInProgress = false;
-      alert('Чтобы получить награду, нужно досмотреть рекламу до конца.');
-    });
-}
-
-/* ============================================================
    НАСТРОЙКИ
    ============================================================ */
 function openSettings() {
@@ -1717,6 +1799,18 @@ function showMenu() {
   document.getElementById('levelBar').classList.remove('on');
   document.getElementById('menuTokens').textContent = state.tokens;
   document.getElementById('menuRecord').textContent = state.record;
+  
+  // Обновляем кнопку приглашения
+  const btnInvite = document.getElementById('btnInvite');
+  if (state.claimedReferral) {
+    btnInvite.textContent = '✓ Друг приглашен (+500 000)';
+    btnInvite.disabled = true;
+    btnInvite.style.background = '#555';
+  } else {
+    btnInvite.textContent = '👥 Пригласить друга (+500 000)';
+    btnInvite.disabled = false;
+    btnInvite.style.background = '#8e44ad';
+  }
 }
 
 /* ============================================================
