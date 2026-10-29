@@ -2,8 +2,10 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Neon Runner Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Runner Evo</title>
+    <!-- Официальный скрипт Telegram, чтобы кнопки работали внутри Web App -->
+    <script src="https://telegram.org"></script>
     <style>
         :root {
             --neon-cyan: #00f3ff;
@@ -24,15 +26,15 @@
             min-height: 100vh;
             overflow: hidden;
             user-select: none;
+            -webkit-user-select: none;
         }
 
-        /* Задний фон с динамическими узорами */
+        /* Задний фон с узорами */
         .bg-pattern {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -2;
-            background-color: #ffd700; /* Стартовые желтые обои по ТЗ */
-            opacity: 1;
+            background-color: #ffd700; /* Стартовые желтые обои */
             transition: all 0.5s ease;
         }
         
@@ -55,8 +57,10 @@
         }
 
         .window {
-            width: 800px;
-            height: 600px;
+            width: 95vw;
+            max-width: 800px;
+            height: 90vh;
+            max-height: 600px;
             background: rgba(13, 13, 26, 0.95);
             border: 3px solid var(--neon-cyan);
             box-shadow: 0 0 20px var(--neon-cyan);
@@ -68,21 +72,23 @@
             justify-content: center;
             box-sizing: border-box;
             padding: 20px;
+            z-index: 10;
         }
 
         h1 {
             color: #fff;
-            font-size: 42px;
+            font-size: 36px;
             margin-bottom: 5px;
             text-transform: uppercase;
             letter-spacing: 2px;
             text-shadow: 0 0 10px var(--neon-magenta);
+            text-align: center;
         }
 
         .balance-text {
             color: var(--neon-magenta);
-            font-size: 20px;
-            margin-bottom: 30px;
+            font-size: 18px;
+            margin-bottom: 20px;
             font-weight: bold;
         }
 
@@ -96,45 +102,51 @@
         }
 
         .screen.active {
-            display: flex;
+            display: flex !important;
         }
 
         /* Кнопки меню */
         .menu-btn {
-            width: 320px;
-            padding: 12px;
-            margin: 10px 0;
-            background: transparent;
+            width: 280px;
+            padding: 14px;
+            margin: 8px 0;
+            background: #111;
             border: 2px solid var(--neon-cyan);
             color: var(--neon-cyan);
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
             border-radius: 5px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             box-shadow: inset 0 0 5px rgba(0, 243, 255, 0.2);
             text-align: center;
+            outline: none;
+            position: relative;
+            z-index: 20;
         }
 
-        .menu-btn:hover {
-            background: var(--neon-cyan);
-            color: #000;
-            box-shadow: 0 0 15px var(--neon-cyan);
+        .menu-btn:active, .menu-btn:hover {
+            background: var(--neon-cyan) !important;
+            color: #000 !important;
+            box-shadow: 0 0 15px var(--neon-cyan) !important;
         }
 
-        /* Магазины и списки предметов */
+        /* Магазины */
         .shop-tabs {
             display: flex;
-            gap: 10px;
+            gap: 5px;
             margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .tab-btn {
-            padding: 8px 16px;
+            padding: 8px 12px;
             background: #222;
             border: 1px solid #444;
             color: #fff;
             cursor: pointer;
+            font-size: 12px;
         }
         .tab-btn.active {
             border-color: var(--neon-green);
@@ -142,15 +154,16 @@
         }
 
         .items-grid {
-            width: 90%;
-            height: 320px;
+            width: 100%;
+            height: 280px;
             overflow-y: auto;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
             padding: 10px;
             border: 1px solid #333;
             background: rgba(0,0,0,0.5);
+            box-sizing: border-box;
         }
 
         .shop-item {
@@ -163,6 +176,7 @@
             align-items: center;
             justify-content: space-between;
             background: #151525;
+            font-size: 12px;
         }
         .shop-item.active-equip {
             border-color: var(--neon-green);
@@ -170,9 +184,9 @@
         }
 
         .item-preview {
-            width: 45px;
-            height: 45px;
-            margin: 10px 0;
+            width: 40px;
+            height: 40px;
+            margin: 8px 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -187,42 +201,38 @@
             border: 1px solid #666;
             color: #fff;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
         }
         .buy-btn.owned { background: #113311; border-color: green; }
 
-        /* Игровой холст */
         canvas {
             background: #000;
             border: 2px solid #fff;
-            display: block;
+            max-width: 100%;
+            height: auto;
+            aspect-ratio: 75/40;
         }
 
         .game-info {
             display: flex;
             justify-content: space-between;
-            width: 95%;
+            width: 100%;
             margin-bottom: 5px;
-            font-size: 16px;
+            font-size: 14px;
         }
 
         .back-btn {
             margin-top: 15px;
             padding: 8px 20px;
-            background: transparent;
+            background: #222;
             border: 1px solid var(--neon-magenta);
             color: var(--neon-magenta);
             cursor: pointer;
         }
-        .back-btn:hover {
-            background: var(--neon-magenta);
-            color: #fff;
-        }
 
-        /* Настройки */
         .setting-row {
-            margin: 15px 0;
-            font-size: 18px;
+            margin: 10px 0;
+            font-size: 16px;
             display: flex;
             align-items: center;
             gap: 15px;
@@ -244,13 +254,13 @@
     <div class="window">
         <!-- ГЛАВНОЕ МЕНЮ -->
         <div id="menuScreen" class="screen active">
-            <h1 id="menuTitle">CYBER RUNNER EVO</h1>
+            <h1>CYBER RUNNER EVO</h1>
             <div class="balance-text">Баланс: <span class="coins-val">0</span> 🪙 | Рекорд: <span id="recordVal">0</span></div>
             
-            <button class="menu-btn" onclick="changeScreen('gameScreen'); startGame();">Старт забега</button>
-            <button class="menu-btn" onclick="changeScreen('shopScreen'); loadShop('skins');">🛍️ Магазин</button>
-            <button class="menu-btn" onclick="changeScreen('musicScreen');">🎵 Магазин музыки</button>
-            <button class="menu-btn" onclick="changeScreen('settingsScreen');">⚙️ Настройки</button>
+            <button class="menu-btn" id="btn-start">Старт забега</button>
+            <button class="menu-btn" id="btn-shop">🛍️ Магазин</button>
+            <button class="menu-btn" id="btn-music">🎵 Магазин музыки</button>
+            <button class="menu-btn" id="btn-settings">⚙️ Настройки</button>
         </div>
 
         <!-- ИГРОВОЙ ЭКРАН -->
@@ -261,42 +271,38 @@
                 <div>Скорость: <span id="speedIndicator">1.0</span>x</div>
             </div>
             <canvas id="gameCanvas" width="750" height="400"></canvas>
-            <button class="back-btn" onclick="exitGame()">Выйти в меню</button>
+            <button class="back-btn" id="btn-exit-game">Выйти в меню</button>
         </div>
 
-        <!-- МАГАЗИН СКИНОВ И ФОНОВ -->
+        <!-- МАГАЗИН -->
         <div id="shopScreen" class="screen">
             <h2>Обычный Магазин</h2>
             <div class="shop-tabs">
-                <button class="tab-btn active" id="tabSkins" onclick="loadShop('skins')">Раздел 1: Цвета куба</button>
-                <button class="tab-btn" id="tabBackgrounds" onclick="loadShop('backgrounds')">Раздел 2: Фоны</button>
-                <button class="tab-btn" id="tabObstacles" onclick="loadShop('obstacles')">Раздел 3: Любые цвета</button>
+                <button class="tab-btn active" id="tabSkins">Раздел 1: Цвета</button>
+                <button class="tab-btn" id="tabBackgrounds">Раздел 2: Фоны</button>
+                <button class="tab-btn" id="tabObstacles">Раздел 3: Любые цвета</button>
             </div>
             <div class="items-grid" id="shopGrid"></div>
-            <button class="back-btn" onclick="changeScreen('menuScreen')">Назад</button>
+            <button class="back-btn" id="btn-back-shop">Назад</button>
         </div>
 
-        <!-- МАГАЗИН МУЗЫКИ -->
+        <!-- МУЗЫКА -->
         <div id="musicScreen" class="screen">
             <h2>Магазин Музыки</h2>
-            <div style="margin-bottom:15px; color:#aaa;">Смотрите рекламу, чтобы разблокировать треки!</div>
+            <div style="margin-bottom:15px; color:#aaa; font-size:12px;">Смотрите рекламу, чтобы разблокировать треки!</div>
             <div class="items-grid" id="musicGrid"></div>
-            <button class="back-btn" onclick="changeScreen('menuScreen')">Назад</button>
+            <button class="back-btn" id="btn-back-music">Назад</button>
         </div>
 
-        <!-- ЭКРАН НАСТРОЕК -->
+        <!-- НАСТРОЕК -->
         <div id="settingsScreen" class="screen">
-            <h2>Настройки игры</h2>
-            
+            <h2>Настройки</h2>
             <div class="setting-row">
-                <span>Автоматический режим (Смена темы на 100k+):</span>
-                <button class="toggle-btn on" id="autoModeBtn" onclick="toggleAutoMode()">ВКЛ</button>
+                <span>Авто-эволюция (100k+):</span>
+                <button class="toggle-btn on" id="autoModeBtn">ВКЛ</button>
             </div>
-            
             <div class="setting-row">
-                <span>Звук в игре:</span>
-                <button class="toggle-btn on" id="soundBtn" onclick="toggleSound()">ВКЛ</button>
+                <span>Звук:</span>
+                <button class="toggle-btn on" id="soundBtn">ВКЛ</button>
             </div>
-
-            <div class="setting-row" style="flex-direction:column; align-items:flex-start;">
-                <div>Изменение скорости игры (за 5 реклам):</div>
+            <div style="margin-top:15px; text-align:center;">
