@@ -3,71 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cyber Runner Fix</title>
+    <title>Cyber Runner FIX</title>
     <style>
-        :root {
-            --neon-cyan: #00f3ff;
-            --neon-magenta: #ff0055;
-            --neon-green: #00ff66;
-            --bg-color: #0d0d1a;
-        }
-        body {
-            margin: 0; padding: 0; background-color: var(--bg-color); color: #fff;
-            font-family: 'Courier New', Courier, monospace;
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; overflow: hidden; user-select: none; -webkit-user-select: none;
-        }
-        .bg-pattern {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -2; background-color: #ffd700; transition: all 0.5s ease;
-        }
-        .bg-pattern.pattern-dots { background: var(--bg-color) radial-gradient(var(--neon-magenta) 10%, transparent 11%); background-size: 30px 30px; }
-        .bg-pattern.pattern-lines { background: var(--bg-color) linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%); background-size: 40px 40px; }
-        .bg-pattern.pattern-grid { background: var(--bg-color) linear-gradient(to right, #222 1px, transparent 1px), linear-gradient(to bottom, #222 1px, transparent 1px); background-size: 20px 20px; }
-        .bg-pattern.pattern-evo { background: #4a00e0; background-image: linear-gradient(135deg, #8e2de2 25%, transparent 25%), linear-gradient(225deg, #8e2de2 25%, transparent 25%); background-size: 50px 50px; }
-        
-        .window {
-            width: 95vw; max-width: 800px; height: 90vh; max-height: 600px;
-            background: rgba(13, 13, 26, 0.95); border: 3px solid var(--neon-cyan);
-            box-shadow: 0 0 20px var(--neon-cyan); border-radius: 10px;
-            position: relative; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; box-sizing: border-box; padding: 20px; z-index: 10;
-        }
-        h1 { color: #fff; font-size: 36px; margin: 0 0 10px 0; text-transform: uppercase; text-shadow: 0 0 10px var(--neon-magenta); text-align: center; }
-        .balance-text { color: var(--neon-magenta); font-size: 18px; margin-bottom: 20px; font-weight: bold; }
+        :root { --cyan: #00f3ff; --magenta: #ff0055; --green: #00ff66; --bg: #0d0d1a; }
+        body { margin: 0; padding: 0; background: var(--bg); color: #fff; font-family: monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; user-select: none; -webkit-user-select: none; }
+        .bg-pattern { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-color: #ffd700; transition: all 0.5s; }
+        .bg-pattern.pattern-dots { background: var(--bg) radial-gradient(var(--magenta) 10%, transparent 11%) 0 0/30px 30px; }
+        .bg-pattern.pattern-lines { background: var(--bg) linear-gradient(45deg, #111 25%, transparent 25%), linear-gradient(-45deg, #111 25%, transparent 25%) 0 0/40px 40px; }
+        .bg-pattern.pattern-grid { background: var(--bg) linear-gradient(to right, #222 1px, transparent 1px), linear-gradient(to bottom, #222 1px, transparent 1px) 0 0/20px 20px; }
+        .bg-pattern.pattern-evo { background: #4a00e0 linear-gradient(135deg, #8e2de2 25%, transparent 25%) 0 0/50px 50px; }
+        .window { width: 95vw; max-width: 800px; height: 90vh; max-height: 600px; background: rgba(13, 13, 26, 0.95); border: 3px solid var(--cyan); box-shadow: 0 0 20px var(--cyan); border-radius: 10px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; padding: 20px; z-index: 10; }
+        h1 { font-size: 32px; margin: 0 0 10px 0; text-transform: uppercase; text-shadow: 0 0 10px var(--magenta); text-align: center; }
+        .balance-text { color: var(--magenta); font-size: 18px; margin-bottom: 20px; font-weight: bold; }
         .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
         .screen.active { display: flex !important; }
-        
-        .menu-btn {
-            width: 280px; padding: 14px; margin: 8px 0; background: #111; border: 2px solid var(--neon-cyan);
-            color: var(--neon-cyan); font-size: 16px; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; border-radius: 5px; transition: all 0.2s ease; text-align: center; outline: none;
-        }
-        .menu-btn:hover, .menu-btn:active { background: var(--neon-cyan) !important; color: #000 !important; box-shadow: 0 0 15px var(--neon-cyan) !important; }
-        
+        .menu-btn { width: 280px; padding: 14px; margin: 8px 0; background: #111; border: 2px solid var(--cyan); color: var(--cyan); font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 5px; text-align: center; outline: none; }
+        .menu-btn:hover { background: var(--cyan); color: #000; box-shadow: 0 0 15px var(--cyan); }
         .shop-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
         .tab-btn { padding: 8px 12px; background: #222; border: 1px solid #444; color: #fff; cursor: pointer; font-size: 12px; }
-        .tab-btn.active { border-color: var(--neon-green); color: var(--neon-green); }
-        
-        .items-grid { width: 100%; height: 260px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 10px; border: 1px solid #333; background: rgba(0,0,0,0.5); box-sizing: border-box; }
+        .tab-btn.active { border-color: var(--green); color: var(--green); }
+        .items-grid { width: 100%; height: 250px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; padding: 10px; border: 1px solid #333; background: rgba(0,0,0,0.5); box-sizing: border-box; }
         .shop-item { border: 2px solid #444; padding: 10px; border-radius: 5px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: #151525; font-size: 11px; box-sizing: border-box; }
-        .shop-item.active-equip { border-color: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
+        .shop-item.active-equip { border-color: var(--green); box-shadow: 0 0 8px var(--green); }
         .item-preview { width: 35px; height: 35px; margin: 5px 0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 10px; }
         .buy-btn { width: 100%; padding: 6px; background: #222; border: 1px solid #666; color: #fff; cursor: pointer; font-size: 11px; }
         .buy-btn.owned { background: #113311; border-color: green; }
-        
         canvas { background: #000; border: 2px solid #fff; max-width: 100%; height: auto; aspect-ratio: 75/40; }
         .game-info { display: flex; justify-content: space-between; width: 100%; margin-bottom: 5px; font-size: 14px; }
-        .back-btn { margin-top: 15px; padding: 8px 20px; background: #222; border: 1px solid var(--neon-magenta); color: var(--neon-magenta); cursor: pointer; }
+        .back-btn { margin-top: 15px; padding: 8px 20px; background: #222; border: 1px solid var(--magenta); color: var(--magenta); cursor: pointer; }
         .setting-row { margin: 10px 0; font-size: 16px; display: flex; align-items: center; gap: 15px; }
         .toggle-btn { padding: 6px 12px; cursor: pointer; background: #333; color: #fff; border: 1px solid #555; }
-        .toggle-btn.on { background: var(--neon-green); color: #000; }
+        .toggle-btn.on { background: var(--green); color: #000; }
     </style>
 </head>
 <body>
     <div class="bg-pattern" id="mainBgPattern"></div>
     <div class="window">
-        <!-- МЕНЮ -->
         <div id="menuScreen" class="screen active">
             <h1>CYBER RUNNER EVO</h1>
             <div class="balance-text">Баланс: <span class="coins-val">0</span> Монет | Рекорд: <span id="recordVal">0</span></div>
@@ -76,8 +47,6 @@
             <button class="menu-btn" id="btn-music">🎵 Магазин музыки</button>
             <button class="menu-btn" id="btn-settings">⚙️ Настройки</button>
         </div>
-
-        <!-- ИГРА -->
         <div id="gameScreen" class="screen">
             <div class="game-info">
                 <div>Счет: <span id="scoreVal">0</span></div>
@@ -87,8 +56,6 @@
             <canvas id="gameCanvas" width="750" height="400"></canvas>
             <button class="back-btn" id="btn-exit-game">Выйти в меню</button>
         </div>
-
-        <!-- МАГАЗИН -->
         <div id="shopScreen" class="screen">
             <h2>Обычный Магазин</h2>
             <div class="shop-tabs">
@@ -99,26 +66,16 @@
             <div class="items-grid" id="shopGrid"></div>
             <button class="back-btn" id="btn-back-shop">Назад</button>
         </div>
-
-        <!-- МУЗЫКА -->
         <div id="musicScreen" class="screen">
             <h2>Магазин Музыки</h2>
             <div style="margin-bottom:10px; color:#aaa; font-size:12px;">Своя музыка — за 10 реклам!</div>
             <div class="items-grid" id="musicGrid"></div>
             <button class="back-btn" id="btn-back-music">Назад</button>
         </div>
-
-        <!-- НАСТРОЙКИ -->
         <div id="settingsScreen" class="screen">
             <h2>Настройки</h2>
-            <div class="setting-row">
-                <span>Авто-эволюция (100k+):</span>
-                <button class="toggle-btn on" id="autoModeBtn">ВКЛ</button>
-            </div>
-            <div class="setting-row">
-                <span>Звук:</span>
-                <button class="toggle-btn on" id="soundBtn">ВКЛ</button>
-            </div>
+            <div class="setting-row"><span>Авто-эволюция (100k+):</span><button class="toggle-btn on" id="autoModeBtn">ВКЛ</button></div>
+            <div class="setting-row"><span>Звук:</span><button class="toggle-btn on" id="soundBtn">ВКЛ</button></div>
             <div style="margin-top:10px; text-align:center; font-size:14px;">
                 <div>Изменение скорости игры (за 5 реклам):</div>
                 <div style="margin-top:10px; display:flex; gap:10px; justify-content:center;">
@@ -130,34 +87,27 @@
             <button class="back-btn" id="btn-back-settings">Назад</button>
         </div>
     </div>
-
     <script>
-        let state = {
-            coins: 0, highscore: 0, claimedThresholds: [], autoMode: true, sound: true, gameSpeedModifier: 1.0,
-            ownedSkins: ['yellow'], activeSkin: 'yellow',
-            ownedBackgrounds: ['default-yellow'], activeBackground: 'default-yellow',
-            ownedObstacles: ['red-laser'], activeObstacle: 'red-laser',
-            adCounts: { skins: {}, music: {} }, ownedMusic: [], activeMusic: null
-        };
-
-        const SAVE_KEY = 'cyber_runner_state_v5';
+        let state = { coins: 0, highscore: 0, claimedThresholds: [], autoMode: true, sound: true, gameSpeedModifier: 1.0, ownedSkins: ['yellow'], activeSkin: 'yellow', ownedBackgrounds: ['default-yellow'], activeBackground: 'default-yellow', ownedObstacles: ['red-laser'], activeObstacle: 'red-laser', adCounts: { skins: {}, music: {} }, ownedMusic: [], activeMusic: null };
+        const SAVE_KEY = 'cyber_runner_state_v6';
         if(localStorage.getItem(SAVE_KEY)) { try { state = Object.assign(state, JSON.parse(localStorage.getItem(SAVE_KEY))); } catch(e){} }
-
         function saveGame() { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); updateUI(); }
-        function updateUI() {
-            document.querySelectorAll('.coins-val').forEach(el => el.innerText = state.coins);
-            document.getElementById('recordVal').innerText = state.highscore;
-        }
-
-        function changeScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-            if(screenId === 'shopScreen') loadShop('skins');
-            if(screenId === 'musicScreen') renderMusicShop();
-            if(screenId === 'menuScreen') applyGlobalBackground();
-        }
-
+        function updateUI() { document.querySelectorAll('.coins-val').forEach(el => el.innerText = state.coins); document.getElementById('recordVal').innerText = state.highscore; }
+        function changeScreen(screenId) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(screenId).classList.add('active'); if(screenId === 'shopScreen') loadShop('skins'); if(screenId === 'musicScreen') renderMusicShop(); if(screenId === 'menuScreen') applyGlobalBackground(); }
         function simulateAd(callback) { alert("Идет показ рекламы... 📺"); setTimeout(() => { callback(); }, 300); }
 
         const SKINS_DATA = [
             { id: 'yellow', type: 'color', val: '#ffd700', cost: 0, desc: 'Стартовый желтый' },
+            { id: 'green-10k', type: 'color', val: '#00ff66', cost: 10000, desc: 'Зеленый куб (10к)' },
+            { id: 'blue-cube', type: 'color', val: '#00f3ff', cost: 20000, desc: 'Синий куб (20к)' },
+            { id: 'magenta-cube', type: 'color', val: '#ff0055', cost: 40000, desc: 'Маджента куб' },
+            { id: 'pattern-cube-10', type: 'pattern', val: 'pattern', cost: 100000, desc: 'Скин №10 Рисунок' },
+            { id: 'ad-skin-1', type: 'color', val: '#e63946', adCost: 1, desc: 'Цвет 1 (1 рекл)' },
+            { id: 'ad-skin-2', type: 'color', val: '#a8dadc', adCost: 2, desc: 'Цвет 2 (2 рекл)' },
+            { id: 'ad-skin-10', type: 'pattern', val: 'pattern', adCost: 10, desc: 'Рисунок (10 рекл)' }
+        ];
+        const BG_DATA = [
+            { id: 'default-yellow', styleClass: '', cost: 0, desc: 'Желтый (Старт)' },
+            { id: 'pattern-dots', styleClass: 'pattern-dots', cost: 15000, desc: 'Фон №2: Точки' },
+            { id: 'pattern-lines', styleClass: 'pattern-lines', cost: 30000, desc: 'Фон №3: Линии' },
+            { id: 'pattern-grid', styleClass: 'pattern-grid', cost: 60000, desc: 'Фон №4: Сетка' },
