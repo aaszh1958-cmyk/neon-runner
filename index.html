@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+ <head>
+  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 <title>Кубик — Runner</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -1575,34 +1574,32 @@ function grantItem(category, index) {
 /* ============================================================
    РЕКЛАМА
    ============================================================ */
+// === ADSGRAM РЕАЛЬНАЯ РЕКЛАМА ===
 let adInProgress = false;
+
 function showAd(count, callback) {
   if (adInProgress) return;
-  if (count <= 0) { callback(); return; }
-  adInProgress = true;
-  const ov = document.getElementById('adOverlay');
-  const cd = document.getElementById('adCountdown');
-  ov.classList.remove('hidden');
 
-  let adsLeft = count;
-  let secs = 2;
-
-  function tick() {
-    cd.textContent = adsLeft + ' / ' + count + ' · ' + secs + 'с';
-    if (secs <= 0) {
-      adsLeft--;
-      if (adsLeft <= 0) {
-        ov.classList.add('hidden');
-        adInProgress = false;
-        callback();
-        return;
-      }
-      secs = 2;
-    }
-    secs--;
-    setTimeout(tick, 1000);
+  if (typeof window.Adsgram === 'undefined') {
+    alert('Реклама временно недоступна. Попробуйте позже.');
+    return;
   }
-  tick();
+
+  adInProgress = true;
+
+  const AdController = window.Adsgram.init({ blockId: "56695" });
+
+  AdController.show()
+    .then((result) => {
+      console.log('✅ Реклама просмотрена', result);
+      adInProgress = false;
+      callback(); 
+    })
+    .catch((result) => {
+      console.log('❌ Реклама не досмотрена:', result);
+      adInProgress = false;
+      alert('Чтобы получить награду, нужно досмотреть рекламу до конца.');
+    });
 }
 
 /* ============================================================
