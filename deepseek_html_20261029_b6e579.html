@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Кубик — Runner</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:#111;color:#fff;user-select:none}
+  #gameCanvas{display:block;width:100vw;height:100vh;background:#f9e79f}
+  .overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;background:rgba(0,0,0,.9);z-index:10;overflow-y:auto}
+  .hidden{display:none!important}
+  h1{font-size:clamp(28px,6vw,48px);margin:15px 0;text-align:center;text-shadow:0 3px 8px #000}
+  h2{font-size:clamp(20px,4vw,32px);margin:10px 0}
+  button{padding:12px 20px;margin:6px;font-size:16px;border:none;border-radius:10px;background:#4a90e2;color:#fff;cursor:pointer;font-weight:600;transition:transform .1s,background .2s}
+  button:hover{transform:scale(1.05);background:#5aa0f2}
+  button:disabled{background:#555;cursor:not-allowed;transform:none}
+  button.small{font-size:12px;padding:7px 10px;margin:3px 0;width:100%}
+  button.orange{background:#e67e22}
+  button.orange:hover{background:#f39c12}
+  button.green{background:#27ae60}
+  button.green:hover{background:#2ecc71}
+  .shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;max-width:1000px;width:100%;margin:10px 0}
+  .shop-item{background:#2a2a2a;padding:8px;border-radius:10px;text-align:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.5);display:flex;flex-direction:column}
+  .shop-item .preview{height:60px;border-radius:6px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;border:2px solid #444;overflow:hidden;font-size:30px;position:relative}
+  .shop-item .preview canvas{max-width:100%;max-height:100%}
+  .shop-item .preview input[type=color]{width:100%;height:100%;border:none;padding:0;cursor:pointer;background:none}
+  .shop-item .item-name{font-weight:600;margin-bottom:4px;min-height:16px}
+  .tabs{display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:10px;max-width:1000px}
+  .tabs button{border-radius:10px;margin:4px;font-size:14px;padding:8px 14px}
+  .tabs button.active{background:#e67e22}
+  .top-bar{position:fixed;top:0;left:0;right:0;padding:10px 15px;display:flex;justify-content:space-between;z-index:5;pointer-events:none;font-size:18px;font-weight:700;text-shadow:0 2px 6px #000;gap:10px}
+  .top-bar .stat{background:rgba(0,0,0,.55);padding:8px 14px;border-radius:10px}
+  .settings-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;width:100%;max-width:520px;padding:12px;margin:6px 0;background:#2a2a2a;border-radius:10px;gap:10px}
+  .settings-row input[type=text]{padding:8px 12px;border-radius:8px;border:1px solid #555;background:#1a1a1a;color:#fff;flex:1;min-width:120px;font-size:14px}
+  .ad-overlay{position:fixed;inset:0;background:rgba(0,0,0,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;text-align:center}
+  .ad-overlay h2{font-size:clamp(24px,5vw,40px);margin-bottom:15px}
+  #adCountdown{font-size:64px;font-weight:900;color:#f1c40f;text-shadow:0 0 30px #f1c40f}
+  .hint{opacity:.7;font-size:14px;margin-top:10px}
+
+  .levels-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;max-width:700px;width:100%;margin:10px 0}
+  .level-btn{aspect-ratio:1;padding:8px;font-size:13px;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;line-height:1.2;background:#3a3a3a;border-radius:12px;cursor:pointer;border:2px solid #555;transition:transform .1s;color:#fff}
+  .level-btn:hover{transform:scale(1.05)}
+  .level-btn.locked{background:#1e1e1e;color:#666;cursor:not-allowed;border-color:#333}
+  .level-btn.locked:hover{transform:none}
+  .level-btn.completed{background:linear-gradient(135deg,#2ecc71,#27ae60);border-color:#2ecc71;color:#fff}
+  .level-btn .lvl-num{font-size:22px;font-weight:900}
+  .level-btn .lvl-tag{font-size:10px;opacity:.85;margin-top:2px}
+  .level-btn.simplified::after{content:'⭐';position:absolute;top:3px;right:5px;font-size:14px}
+  .play-top-btn{font-size:20px;padding:16px 44px;margin:10px 0 25px}
+
+  #levelBar{position:fixed;top:70px;left:50%;transform:translateX(-50%);width:60%;max-width:500px;height:18px;background:rgba(0,0,0,.5);border-radius:10px;overflow:hidden;z-index:6;display:none;border:2px solid rgba(255,255,255,.3)}
+  #levelBar.on{display:block}
+  #levelBarFill{height:100%;width:0;background:linear-gradient(90deg,#6ee7ff,#a78bfa);transition:width .1s linear}
+  #levelBarText{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;text-shadow:0 1px 3px #000}
+
+  #levelIndexList{font-size:12px;line-height:1.7;color:#ddd}
+  #levelIndexList .lvl-row{display:flex;justify-content:space-between;padding:1px 0}
+  #levelIndexList .lvl-done{color:#2ecc71}
+  #levelIndexList .lvl-lock{color:#666}
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="960" height="480"></canvas>
+
+<div class="top-bar hidden" id="topBar">
+  <div class="stat" id="scoreDisplay">Счёт: 0</div>
+  <div class="stat" id="tokenDisplay">🪙 0</div>
+</div>
+<div id="levelBar"><div id="levelBarFill"></div><div id="levelBarText"></div></div>
+
+<!-- МЕНЮ -->
+<div class="overlay" id="menu">
+  <h1>🟦 Кубик 🟦</h1>
+  <p style="font-size:20px;margin:6px">Рекорд: <b id="menuRecord">0</b></p>
+  <p style="font-size:20px;margin:6px">🪙 Токены: <b id="menuTokens">0</b></p>
+  <button onclick="openPlaySelect()">▶ Играть</button>
+  <button onclick="openShop()">🛒 Магазин</button>
+  <button onclick="openSettings()">⚙ Настройки</button>
+  <p class="hint">Пробел / клик / тап — прыжок</p>
+</div>
+
+<!-- ВЫБОР РЕЖИМА -->
+<div class="overlay hidden" id="playSelect">
+  <h1>Играть</h1>
+  <button class="play-top-btn green" onclick="startGame('endless')">▶ Бесконечный режим</button>
+  <h2>Уровни</h2>
+  <p class="hint" style="margin-bottom:8px">В уровнях отключены двойной прыжок и ускорение. За прохождение — 100 000 🪙</p>
+  <div class="levels-grid" id="levelsGrid"></div>
+  <button onclick="showMenu()">← Назад</button>
+</div>
+
+<!-- КОНЕЦ -->
+<div class="overlay hidden" id="gameover">
+  <h1 id="gameoverTitle">💥 Игра окончена!</h1>
+  <p style="font-size:22px;margin:8px" id="goScore">Счёт: <b id="finalScore">0</b></p>
+  <p style="font-size:20px;margin:8px" id="goRecord">Рекорд: <b id="finalRecord">0</b></p>
+  <p style="font-size:22px;margin:8px;color:#f1c40f" id="goCoins">+<b id="coinsEarned">0</b> 🪙</p>
+  <p style="font-size:18px;margin:8px;color:#2ecc71" id="milestoneInfo"></p>
+  <div id="gameoverButtons" style="margin-top:15px;display:flex;flex-wrap:wrap;justify-content:center"></div>
+</div>
+
+<!-- МАГАЗИН -->
+<div class="overlay hidden" id="shop">
+  <h1>🛒 Магазин</h1>
+  <p style="font-size:20px;margin-bottom:10px">🪙 <b id="shopTokens">0</b></p>
+  <div class="tabs">
+    <button class="active" id="tabColors" onclick="switchTab('colors')">🎨 Цвета</button>
+    <button id="tabBackgrounds" onclick="switchTab('backgrounds')">🖼 Фоны</button>
+    <button id="tabObstacles" onclick="switchTab('obstacles')">🚧 Препятствия</button>
+    <button id="tabMusic" onclick="switchTab('music')">🎵 Музыка</button>
+    <button id="tabVitrina" onclick="switchTab('vitrina')">🏆 Витрина</button>
+  </div>
+  <div class="shop-grid" id="shopGrid"></div>
+  <button onclick="showMenu()">← Назад</button>
+</div>
+
+<!-- НАСТРОЙКИ -->
+<div class="overlay hidden" id="settings">
+  <h1>⚙ Настройки</h1>
+  <div class="settings-row">
+    <span>Автоматический режим (на 100 000)</span>
+    <button id="btnAuto" onclick="toggleSetting('autoMode')">ВКЛ</button>
+  </div>
+  <div class="settings-row">
+    <span>Звук</span>
+    <button id="btnSound" onclick="toggleSetting('soundOn')">ВКЛ</button>
+  </div>
+  <div class="settings-row">
+    <span>Скорость игры: <b id="speedLabel">1x</b></span>
+    <div>
+      <button class="small" style="width:auto;display:inline-block" onclick="setSpeed(0.5)">0.5x</button>
+      <button class="small" style="width:auto;display:inline-block" onclick="setSpeed(1)">1x</button>
+      <button class="small" style="width:auto;display:inline-block" onclick="setSpeed(2)">2x</button>
+    </div>
+  </div>
+  <div class="settings-row">
+    <span>Разблокировать 0.5x / 2x</span>
+    <button id="btnUnlockSpeed" onclick="unlockSpeed()">📺 5 рекл.</button>
+  </div>
+  <div class="settings-row">
+    <span>Двойной прыжок</span>
+    <button id="btnDoubleJump" onclick="unlockDoubleJump()">📺 10 рекл.</button>
+  </div>
+  <div class="settings-row">
+    <span>Промокод</span>
+    <input id="promoInput" type="text" placeholder="Введите промокод...">
+    <button onclick="applyPromo()">Активировать</button>
+  </div>
+  <div class="settings-row" style="flex-direction:column;align-items:stretch">
+    <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+      <span>Индекс уровней: <b id="levelProgressLabel">0 / 10</b></span>
+      <button class="orange" onclick="resetLevels()">🔄 Сбросить</button>
+    </div>
+    <div id="levelIndexList" style="margin-top:8px"></div>
+  </div>
+  <button onclick="showMenu()" style="margin-top:20px">← Назад</button>
+</div>
+
+<!-- РЕКЛАМА -->
+<div class="ad-overlay hidden" id="adOverlay">
+  <h2>📺 Реклама</h2>
+  <div id="adCountdown">0</div>
+  <p>Подождите...</p>
+</div>
+
+<script>
+/* ============================================================
+   ДАННЫЕ
+   ============================================================ */
+const COLORS = [
+  {name:'Стандарт', color:'#95a5a6'},
+  {name:'Зелёный', color:'#2ecc71', ads:1, tokens:10000},
+  {name:'Синий', color:'#3498db', ads:2, tokens:20000},
+  {name:'Красный', color:'#e74c3c', ads:3, tokens:30000},
+  {name:'Оранжевый', color:'#e67e22', ads:4, tokens:40000},
+  {name:'Фиолетовый', color:'#9b59b6', ads:5, tokens:50000},
+  {name:'Розовый', color:'#fd79a8', ads:6, tokens:60000},
+  {name:'Бирюзовый', color:'#1abc9c', ads:7, tokens:70000},
+  {name:'Золотой', color:'#f1c40f', ads:8, tokens:80000},
+  {name:'🎨 Свой цвет', custom:true, ads:10, tokens:100000},
+  {name:'✨ Анимированный', animated:true, ads:10, tokens:100000},
+];
+
+const BACKGROUNDS = [
+  {name:'Жёлтый',     bg:'#f9e79f', pattern:'dots'},
+  {name:'Голубой',    bg:'#aed6f1', pattern:'hexgrid',   ads:1, tokens:10000},
+  {name:'Зелёный',    bg:'#abebc6', pattern:'triangles', ads:2, tokens:20000},
+  {name:'Розовый',    bg:'#f5b7b1', pattern:'chevron',   ads:3, tokens:30000},
+  {name:'Лаванда',    bg:'#d2b4de', pattern:'diagcross', ads:4, tokens:40000},
+  {name:'Персик',     bg:'#f5cba7', pattern:'bricks',    ads:5, tokens:50000},
+  {name:'Мята',       bg:'#a3e4d7', pattern:'topo',      ads:6, tokens:60000},
+  {name:'Закат',      bg:'#f0b27a', pattern:'waves',     ads:7, tokens:70000},
+  {name:'Космос',     bg:'#0b0b2b', pattern:'galaxy',    ads:8, tokens:80000},
+  {name:'🎨 Свой фон', custom:true, ads:10, tokens:100000},
+  {name:'✨ Анимированный', bg:'#1a0033', pattern:'confetti', animated:true, ads:10, tokens:100000},
+];
+
+const OBSTACLES = [
+  {name:'Серый', color:'#7f8c8d'},
+  {name:'Красный', color:'#e74c3c', ads:1, tokens:10000},
+  {name:'Синий', color:'#3498db', ads:2, tokens:20000},
+  {name:'Зелёный', color:'#27ae60', ads:3, tokens:30000},
+  {name:'Оранжевый', color:'#e67e22', ads:4, tokens:40000},
+  {name:'Фиолетовый', color:'#8e44ad', ads:5, tokens:50000},
+  {name:'Розовый', color:'#e84393', ads:6, tokens:60000},
+  {name:'Бирюзовый', color:'#16a085', ads:7, tokens:70000},
+  {name:'Коричневый', color:'#8b4513', ads:8, tokens:80000},
+  {name:'🎨 Свой цвет', custom:true, ads:10, tokens:100000},
+  {name:'⚡ Анимированный', animated:true, ads:10, tokens:100000},
+];
+
+const MUSIC = [
+  {name:'Стандарт'},
+  {name:'Своя музыка', ads:10, tokens:0},
+];
+
+const VITRINA = [
+  {tokens: 10000,  ads: 1, name:'10 000 🪙',  emoji:'💰'},
+  {tokens: 50000,  ads: 3, name:'50 000 🪙',  emoji:'💎'},
+  {tokens: 100000, ads: 5, name:'100 000 🪙', emoji:'🏆'},
+];
+
+const MILESTONES = [10000,20000,30000,40000,50000,60000,70000,80000,90000,100000];
+
+/* УРОВНИ — сложность растёт, типы препятствий меняются */
+const LEVELS = [
+  {name:'Уровень 1',  time:20, spawn:120, speedBase:5.5, maxGroup:1, types:['basic']},
+  {name:'Уровень 2',  time:22, spawn:110, speedBase:6,   maxGroup:1, types:['basic']},
+  {name:'Уровень 3',  time:25, spawn:105, speedBase:6.5, maxGroup:2, types:['basic','wide']},
+  {name:'Уровень 4',  time:28, spawn:98,  speedBase:7,   maxGroup:2, types:['basic','wide','basic']},
+  {name:'Уровень 5',  time:30, spawn:92,  speedBase:7.5, maxGroup:2, types:['wide','wide','basic']},
+  {name:'Уровень 6',  time:33, spawn:88,  speedBase:8,   maxGroup:2, types:['wide','ceiling','basic']},
+  {name:'Уровень 7',  time:36, spawn:82,  speedBase:8.5, maxGroup:2, types:['wide','ceiling','moving']},
+  {name:'Уровень 8',  time:40, spawn:76,  speedBase:9,   maxGroup:3, types:['ceiling','moving','spike','wide']},
+  {name:'Уровень 9',  time:45, spawn:70,  speedBase:9.5, maxGroup:3, types:['ceiling','moving','spike','wide','moving']},
+  {name:'Уровень 10', time:50, spawn:64,  speedBase:10,  maxGroup:3, types:['ceiling','moving','spike','wide','moving','ceiling']},
+];
+
+const LEVEL_REWARD = 100000;
+
+/* ============================================================
+   СОСТОЯНИЕ
+   ============================================================ */
+const state = {
+  screen: 'menu',
+  gameMode: 'endless',
+  currentLevel: -1,
+  levelElapsed: 0,
+  levelTarget: 0,
+  framesSinceSpawn: 0,
+  gameTime: 0,
+
+  tokens: 0,
+  record: 0,
+  score: 0,
+  speed: 5,
+  speedMultiplier: 1,
+  autoMode: true,
+  soundOn: true,
+  speedUnlocked: false,
+  doubleJumpUnlocked: false,
+  promoUsed: false,
+  ownedColors:      [true,false,false,false,false,false,false,false,false,false,false],
+  ownedBackgrounds: [true,false,false,false,false,false,false,false,false,false,false],
+  ownedObstacles:   [true,false,false,false,false,false,false,false,false,false,false],
+  ownedMusic:       [true,false],
+  selectedColor: 0,
+  selectedBackground: 0,
+  selectedObstacle: 0,
+  selectedMusic: 0,
+  useCustomColor: false,
+  useCustomBg: false,
+  useCustomObstacle: false,
+  customColor: '#ff00ff',
+  customBg: '#203040',
+  customObstacle: '#ff4444',
+  claimedMilestones: [],
+  levelsCompleted: [],
+  levelSimplified: [],
+  currentTab: 'colors',
+  player: null,
+  obstacles: [],
+  distSinceSpawn: 0,
+  nextGap: 500,
+  lastTime: 0,
+  groundY: 400,
+  autoTriggered: false,
+  prevColor: 0, prevBg: 0, prevObs: 0,
+  frameId: null,
+};
+
+/* ============================================================
+   СОХРАНЕНИЕ
+   ============================================================ */
+function saveGame() {
+  try {
+    localStorage.setItem('cubeGameV6', JSON.stringify({
+      tokens: state.tokens, record: state.record,
+      ownedColors: state.ownedColors, ownedBackgrounds: state.ownedBackgrounds,
+      ownedObstacles: state.ownedObstacles, ownedMusic: state.ownedMusic,
+      selectedColor: state.selectedColor, selectedBackground: state.selectedBackground,
+      selectedObstacle: state.selectedObstacle, selectedMusic: state.selectedMusic,
+      useCustomColor: state.useCustomColor, useCustomBg: state.useCustomBg, useCustomObstacle: state.useCustomObstacle,
+      customColor: state.customColor, customBg: state.customBg, customObstacle: state.customObstacle,
+      claimedMilestones: state.claimedMilestones,
+      speedUnlocked: state.speedUnlocked, doubleJumpUnlocked: state.doubleJumpUnlocked,
+      speedMultiplier: state.speedMultiplier, autoMode: state.autoMode,
+      soundOn: state.soundOn, promoUsed: state.promoUsed,
+      levelsCompleted: state.levelsCompleted, levelSimplified: state.levelSimplified,
+    }));
+  } catch(e) {}
+}
+
+function loadGame() {
+  try {
+    const s = JSON.parse(localStorage.getItem('cubeGameV6'));
+    if (!s) return;
+    Object.assign(state, s);
+    const fix = (arr, len) => {
+      if (!Array.isArray(arr) || arr.length !== len) {
+        const r = new Array(len).fill(false);
+        r[0] = true;
+        return r;
+      }
+      return arr;
+    };
+    state.ownedColors      = fix(state.ownedColors, COLORS.length);
+    state.ownedBackgrounds = fix(state.ownedBackgrounds, BACKGROUNDS.length);
+    state.ownedObstacles   = fix(state.ownedObstacles, OBSTACLES.length);
+    state.ownedMusic       = fix(state.ownedMusic, MUSIC.length);
+    if (!Array.isArray(state.levelsCompleted) || state.levelsCompleted.length !== LEVELS.length)
+      state.levelsCompleted = new Array(LEVELS.length).fill(false);
+    if (!Array.isArray(state.levelSimplified) || state.levelSimplified.length !== LEVELS.length)
+      state.levelSimplified = new Array(LEVELS.length).fill(0);
+  } catch(e) {}
+}
+
+/* ============================================================
+   CANVAS
+   ============================================================ */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  const w = window.innerWidth || document.documentElement.clientWidth || 960;
+  const h = window.innerHeight || document.documentElement.clientHeight || 480;
+  canvas.width  = Math.max(w, 320);
+  canvas.height = Math.max(h, 240);
+  state.groundY = canvas.height - 80;
+}
+window.addEventListener('resize', () => {
+  resize();
+  if (state.screen === 'game' && state.player) {
+    if (state.player.y > state.groundY - state.player.size) {
+      state.player.y = state.groundY - state.player.size;
+    }
+  }
+});
+resize();
+
+/* ============================================================
+   ЗВУК
+   ============================================================ */
+let audioCtx = null;
+function playSound(freq, dur, type) {
+  if (!state.soundOn) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.frequency.value = freq;
+    o.type = type || 'sine';
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.06, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    o.start();
+    o.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+
+/* ============================================================
+   УЗОРЫ (современные)
+   ============================================================ */
+function paintPattern(c, W, H, pattern, animated) {
+  if (!pattern || pattern === 'none') return;
+  c.save();
+  const t = animated ? performance.now() / 20 : 0;
+  switch(pattern) {
+    case 'dots': {
+      c.fillStyle = 'rgba(0,0,0,0.10)';
+      const s = 42;
+      for (let x = 0; x < W; x += s)
+        for (let y = 0; y < H; y += s) {
+          c.beginPath(); c.arc(x + s/2, y + s/2, 4, 0, Math.PI*2); c.fill();
+        }
+      break;
+    }
+    case 'hexgrid': {
+      const s = 36;
+      const h = s * Math.sqrt(3) / 2;
+      c.strokeStyle = 'rgba(0,0,0,0.14)';
+      c.lineWidth = 1;
+      for (let row = -1; row * h < H + s; row++) {
+        for (let col = -1; col * s < W + s; col++) {
+          const cx = col * s + (row % 2 ? s/2 : 0);
+          const cy = row * h;
+          c.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const a = Math.PI / 3 * i;
+            const px = cx + Math.cos(a) * s * 0.5;
+            const py = cy + Math.sin(a) * s * 0.5;
+            if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+          }
+          c.closePath();
+          c.stroke();
+        }
+      }
+      break;
+    }
+    case 'triangles': {
+      const s = 46;
+      const h = s * Math.sqrt(3) / 2;
+      c.fillStyle = 'rgba(0,0,0,0.08)';
+      for (let row = -1; row * h < H + h; row++) {
+        for (let col = -1; col * s < W + s; col++) {
+          const offset = (row % 2) ? s/2 : 0;
+          const cx = col * s + offset;
+          const cy = row * h;
+          c.beginPath();
+          c.moveTo(cx, cy);
+          c.lineTo(cx + s, cy);
+          c.lineTo(cx + s/2, cy + h);
+          c.closePath();
+          c.fill();
+        }
+      }
+      break;
+    }
+    case 'chevron': {
+      c.strokeStyle = 'rgba(0,0,0,0.11)';
+      c.lineWidth = 3;
+      const s = 50;
+      for (let y = 0; y < H + s; y += s) {
+        for (let x = -s; x < W + s; x += s) {
+          c.beginPath();
+          c.moveTo(x, y);
+          c.lineTo(x + s/2, y + s/2);
+          c.lineTo(x + s, y);
+          c.stroke();
+        }
+      }
+      break;
+    }
+    case 'diagcross': {
+      c.strokeStyle = 'rgba(0,0,0,0.09)';
+      c.lineWidth = 1;
+      const s = 32;
+      for (let i = -H; i < W + H; i += s) {
+        c.beginPath(); c.moveTo(i, 0); c.lineTo(i + H, H); c.stroke();
+        c.beginPath(); c.moveTo(i, H); c.lineTo(i + H, 0); c.stroke();
+      }
+      break;
+    }
+    case 'bricks': {
+      c.strokeStyle = 'rgba(0,0,0,0.14)';
+      c.lineWidth = 2;
+      const bw = 60, bh = 30;
+      for (let row = 0; row * bh < H; row++) {
+        c.beginPath();
+        c.moveTo(0, row * bh);
+        c.lineTo(W, row * bh);
+        c.stroke();
+        const offset = (row % 2) ? bw / 2 : 0;
+        for (let x = offset; x < W; x += bw) {
+          c.beginPath();
+          c.moveTo(x, row * bh);
+          c.lineTo(x, (row + 1) * bh);
+          c.stroke();
+        }
+      }
+      break;
+    }
+    case 'topo': {
+      c.strokeStyle = 'rgba(0,0,0,0.09)';
+      c.lineWidth = 1;
+      for (let cx = 100; cx < W + 150; cx += 200) {
+        for (let cy = 80; cy < H + 150; cy += 180) {
+          for (let r = 25; r < 150; r += 30) {
+            c.beginPath(); c.arc(cx, cy, r, 0, Math.PI*2); c.stroke();
+          }
+        }
+      }
+      break;
+    }
+    case 'waves': {
+      c.strokeStyle = 'rgba(0,0,0,0.12)';
+      c.lineWidth = 2;
+      for (let y = 30; y < H; y += 40) {
+        c.beginPath();
+        for (let x = 0; x <= W; x += 10) {
+          const yy = y + Math.sin(x/30 + t*0.3) * 8;
+          if (x === 0) c.moveTo(x, yy); else c.lineTo(x, yy);
+        }
+        c.stroke();
+      }
+      break;
+    }
+    case 'confetti': {
+      const colors = ['#ff6b6b','#4ecdc4','#ffe66d','#a06cd5','#ff8c42','#95e1d3'];
+      for (let i = 0; i < 60; i++) {
+        const x = ((i * 173 + t * 1.5) % (W + 20)) - 10;
+        const y = ((i * 97 + Math.sin(t * 0.02 + i) * 15) % (H + 20)) - 10;
+        c.fillStyle = colors[i % colors.length];
+        c.globalAlpha = 0.55;
+        c.save();
+        c.translate(x, y);
+        c.rotate(i * 0.7 + t * 0.03);
+        c.fillRect(-6, -3, 12, 6);
+        c.restore();
+      }
+      c.globalAlpha = 1;
+      break;
+    }
+    case 'galaxy': {
+      c.fillStyle = 'rgba(255,255,255,0.75)';
+      for (let i = 0; i < 220; i++) {
+        const x = (i * 137.5) % W;
+        const y = (i * 73.7) % H;
+        c.fillRect(x, y, 2, 2);
+      }
+      const g = c.createRadialGradient(W/2, H/2, 50, W/2, H/2, 320);
+      g.addColorStop(0, 'rgba(150,50,255,0.20)');
+      g.addColorStop(1, 'rgba(150,50,255,0)');
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, H);
+      break;
+    }
+  }
+  c.restore();
+}
+
+/* ============================================================
+   ФИЗИКА / КОНФИГ
+   ============================================================ */
+function computeJumpDist(speed) {
+  const sp = speed || state.speed;
+  const v = 14 + sp * 0.35;
+  const airFrames = 2 * v / 0.75;
+  return sp * airFrames;
+}
+
+function getLevelConfig(levelIndex) {
+  const base = LEVELS[levelIndex];
+  const simpl = state.levelSimplified[levelIndex] || 0;
+  return {
+    name: base.name,
+    time: base.time,
+    spawn: base.spawn + simpl * 18,
+    maxGroup: Math.max(1, base.maxGroup - Math.floor(simpl / 2)),
+    speedBase: Math.max(5, base.speedBase - simpl * 0.5),
+    types: simpl >= 2
+      ? base.types.filter(t => t === 'basic' || t === 'wide')
+      : base.types,
+  };
+}
+
+/* ============================================================
+   СПАВН СПЕЦ-ПРЕПЯТСТВИЙ
+   ============================================================ */
+function spawnTypedObstacle(type, baseX) {
+  const size = state.player ? state.player.size : 50;
+  switch(type) {
+    case 'basic': {
+      const isSmall = Math.random() < 0.5;
+      const w = isSmall ? 25 + Math.random()*15 : 50 + Math.random()*35;
+      const h = isSmall ? 30 + Math.random()*30 : 55 + Math.random()*45;
+      return { x: baseX, y: state.groundY - h, w, h, kind:'basic' };
+    }
+    case 'wide': {
+      const w = 100 + Math.random() * 80;
+      const h = 40 + Math.random() * 30;
+      return { x: baseX, y: state.groundY - h, w, h, kind:'wide' };
+    }
+    case 'ceiling': {
+      const w = 90 + Math.random() * 60;
+      const extraGap = 30 + Math.random() * 15;
+      const h = state.groundY - size - extraGap;
+      return { x: baseX, y: 0, w, h, kind:'ceiling' };
+    }
+    case 'moving': {
+      const w = 30 + Math.random() * 15;
+      const h = 40 + Math.random() * 20;
+      const lowY = state.groundY - h;
+      const amp = 180;
+      return { x: baseX, y: lowY, w, h, lowY, amp, phase: Math.random()*Math.PI*2, kind:'moving' };
+    }
+    case 'spike': {
+      const w = 30;
+      const h = 30 + Math.random() * 20;
+      return { x: baseX, y: state.groundY - h, w, h, kind:'spike' };
+    }
+  }
+  return null;
+}
+
+function rightmostObstacleX() {
+  let mx = 0;
+  for (const o of state.obstacles) mx = Math.max(mx, o.x + o.w);
+  return mx;
+}
+
+/* ============================================================
+   СТАРТ
+   ============================================================ */
+function startGame(mode, levelIndex) {
+  resize();
+
+  state.gameMode = mode || 'endless';
+  state.currentLevel = (mode === 'level' && levelIndex !== undefined) ? levelIndex : -1;
+
+  if (state.autoTriggered) {
+    state.selectedColor = state.prevColor;
+    state.selectedBackground = state.prevBg;
+    state.selectedObstacle = state.prevObs;
+  }
+  state.autoTriggered = false;
+  state.screen = 'game';
+  state.score = 0;
+  state.obstacles = [];
+  state.distSinceSpawn = 0;
+  state.framesSinceSpawn = 0;
+  state.nextGap = 500;
+  state.levelElapsed = 0;
+  state.gameTime = 0;
+
+  if (mode === 'level') {
+    const cfg = getLevelConfig(levelIndex);
+    state.speed = cfg.speedBase;
+    state.levelTarget = cfg.time;
+    state.speedMultiplier = 1;
+  } else {
+    state.speed = 5;
+  }
+
+  if (!state.groundY || state.groundY <= 0 || state.groundY > canvas.height) {
+    state.groundY = canvas.height - 80;
+  }
+
+  state.player = {
+    x: 120, y: state.groundY - 50, vy: 0, size: 50, onGround: true,
+    jumpsLeft: (mode === 'level' || !state.doubleJumpUnlocked) ? 1 : 2
+  };
+
+  document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+  document.getElementById('topBar').classList.remove('hidden');
+
+  const bar = document.getElementById('levelBar');
+  if (mode === 'level') bar.classList.add('on');
+  else bar.classList.remove('on');
+
+  updateHUD();
+  state.lastTime = performance.now();
+  if (state.frameId) cancelAnimationFrame(state.frameId);
+  state.frameId = requestAnimationFrame(loop);
+}
+
+function jump() {
+  if (state.screen !== 'game' || !state.player) return;
+  const p = state.player;
+  if (p.jumpsLeft > 0) {
+    p.vy = -(14 + state.speed * 0.35);
+    p.jumpsLeft--;
+    p.onGround = false;
+    playSound(p.jumpsLeft > 0 ? 600 : 500, 0.07);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') {
+    e.preventDefault();
+    if (state.screen === 'game') jump();
+  }
+});
+canvas.addEventListener('mousedown', jump);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); jump(); }, { passive: false });
+
+function loop(time) {
+  if (state.screen !== 'game') { state.frameId = null; return; }
+  if (canvas.width < 100 || canvas.height < 100 || !state.groundY || state.groundY <= 0) {
+    resize();
+    if (state.player) {
+      state.player.y = Math.min(state.player.y, state.groundY - state.player.size);
+    }
+  }
+  let rawDt = Math.min((time - state.lastTime) / 16.667, 3);
+  state.lastTime = time;
+
+  const gameDt = rawDt * (state.gameMode === 'level' ? 1 : state.speedMultiplier);
+  update(gameDt, rawDt);
+  if (state.screen === 'game') render();
+  state.frameId = requestAnimationFrame(loop);
+}
+
+/* ============================================================
+   СПАВН
+   ============================================================ */
+function spawnEndless() {
+  const jumpDist = computeJumpDist();
+  const diff = Math.min(1, 0.5 + state.score / 40000);
+
+  let count = 1;
+  if (state.score > 20000) {
+    const r = Math.random();
+    if (r < 0.25) count = 3;
+    else if (r < 0.55) count = 2;
+  } else if (state.score > 8000) {
+    const r = Math.random();
+    if (r < 0.12) count = 3;
+    else if (r < 0.45) count = 2;
+  } else if (state.score > 3000) {
+    if (Math.random() < 0.25) count = 2;
+  }
+
+  let x = canvas.width + 60;
+  const rx = rightmostObstacleX();
+  if (rx > 0) x = Math.max(x, rx + jumpDist * 1.6 + 60);
+
+  for (let i = 0; i < count; i++) {
+    const isSmall = Math.random() < 0.55;
+    const w = isSmall ? 25 + Math.random() * 15 * diff : 45 + Math.random() * 45 * diff;
+    const h = isSmall ? 25 + Math.random() * 25 * diff : 50 + Math.random() * 60 * diff;
+    state.obstacles.push({ x, y: state.groundY - h, w, h, kind:'basic' });
+    x += jumpDist * 1.35 + 60 + Math.random() * 60;
+  }
+}
+
+function spawnGroupLevel() {
+  const cfg = getLevelConfig(state.currentLevel);
+  const jumpDist = computeJumpDist(cfg.speedBase);
+
+  const count = 1 + Math.floor(Math.random() * cfg.maxGroup);
+
+  let x = canvas.width + 60;
+  const rx = rightmostObstacleX();
+  if (rx > 0) x = Math.max(x, rx + jumpDist * 1.5 + 40);
+
+  for (let i = 0; i < count; i++) {
+    let type = cfg.types[Math.floor(Math.random() * cfg.types.length)];
+
+    // Нельзя ставить ceiling сразу после wide (игрок будет в воздухе)
+    const last = state.obstacles[state.obstacles.length - 1];
+    if (last && last.kind === 'wide' && type === 'ceiling') {
+      type = 'basic';
+    }
+
+    const obs = spawnTypedObstacle(type, x);
+    if (!obs) continue;
+    state.obstacles.push(obs);
+
+    const safety = (type === 'wide' || type === 'ceiling' || type === 'moving' || type === 'spike') ? 2.4 : 1.4;
+    x = obs.x + obs.w + jumpDist * safety + 40 + Math.random() * 50;
+  }
+}
+
+/* ============================================================
+   UPDATE
+   ============================================================ */
+function update(dt, rawDt) {
+  const p = state.player;
+  if (!p) return;
+
+  state.gameTime += rawDt / 60;
+
+  if (!state.groundY || state.groundY <= 0 || state.groundY > canvas.height) {
+    state.groundY = canvas.height - 80;
+  }
+
+  // Обновляем движущиеся препятствия
+  for (const o of state.obstacles) {
+    if (o.kind === 'moving') {
+      const phaseVal = 0.5 + 0.5 * Math.sin(state.gameTime * 2 + o.phase);
+      o.y = o.lowY - o.amp * phaseVal;
+    }
+  }
+
+  if (state.gameMode === 'level') {
+    const cfg = getLevelConfig(state.currentLevel);
+    state.speed = cfg.speedBase + Math.min(3, state.levelElapsed / 15);
+    state.levelElapsed += rawDt / 60;
+
+    const pct = Math.min(100, (state.levelElapsed / state.levelTarget) * 100);
+    document.getElementById('levelBarFill').style.width = pct + '%';
+    document.getElementById('levelBarText').textContent =
+      Math.floor(state.levelElapsed) + ' / ' + state.levelTarget + ' c';
+
+    if (state.levelElapsed >= state.levelTarget) {
+      levelComplete();
+      return;
+    }
+  } else {
+    state.speed = 5 + Math.min(10, state.score / 8000);
+  }
+
+  // Физика
+  p.vy += 0.75 * dt;
+  p.y += p.vy * dt;
+  if (p.y >= state.groundY - p.size) {
+    p.y = state.groundY - p.size;
+    p.vy = 0;
+    p.onGround = true;
+    p.jumpsLeft = (state.gameMode === 'level' || !state.doubleJumpUnlocked) ? 1 : 2;
+  }
+
+  // Спавн
+  if (state.gameMode === 'level') {
+    const cfg = getLevelConfig(state.currentLevel);
+    state.framesSinceSpawn += dt;
+    if (state.framesSinceSpawn >= cfg.spawn) {
+      spawnGroupLevel();
+      state.framesSinceSpawn = 0;
+    }
+  } else {
+    state.distSinceSpawn += state.speed * dt;
+    if (state.distSinceSpawn >= state.nextGap) {
+      spawnEndless();
+      state.distSinceSpawn = 0;
+      state.nextGap = computeJumpDist() * (2.2 + Math.random() * 0.8);
+    }
+  }
+
+  // Движение
+  for (let i = state.obstacles.length - 1; i >= 0; i--) {
+    const o = state.obstacles[i];
+    o.x -= state.speed * dt;
+    if (o.x + o.w < -50) {
+      state.obstacles.splice(i, 1);
+      if (state.gameMode === 'endless') state.score += 30;
+    }
+  }
+
+  // Столкновения (общий AABB)
+  for (const o of state.obstacles) {
+    if (p.x + p.size > o.x && p.x < o.x + o.w &&
+        p.y + p.size > o.y && p.y < o.y + o.h) {
+      gameOver();
+      return;
+    }
+  }
+
+  if (state.gameMode === 'endless') {
+    state.score += dt * 2;
+    if (state.autoMode && !state.autoTriggered && state.score >= 100000) {
+      state.prevColor = state.selectedColor;
+      state.prevBg = state.selectedBackground;
+      state.prevObs = state.selectedObstacle;
+      state.selectedColor = 10;
+      state.selectedBackground = 10;
+      state.selectedObstacle = 10;
+      state.useCustomColor = false;
+      state.useCustomBg = false;
+      state.useCustomObstacle = false;
+      state.autoTriggered = true;
+      playSound(1200, 0.3);
+    }
+  }
+
+  updateHUD();
+}
+
+function updateHUD() {
+  const sd = document.getElementById('scoreDisplay');
+  const td = document.getElementById('tokenDisplay');
+  if (sd) {
+    if (state.gameMode === 'level') {
+      sd.textContent = 'Ур.' + (state.currentLevel + 1) + ' · ⏱' + Math.floor(state.levelElapsed) + '/' + state.levelTarget + 'с';
+    } else {
+      sd.textContent = 'Счёт: ' + Math.floor(state.score);
+    }
+  }
+  if (td) td.textContent = '🪙 ' + state.tokens;
+}
+
+/* ============================================================
+   КОНЕЦ / ПРОХОЖДЕНИЕ
+   ============================================================ */
+function gameOver() {
+  state.screen = 'gameover';
+  playSound(120, 0.4);
+
+  if (state.gameMode === 'level') {
+    document.getElementById('gameoverTitle').textContent = '💀 Уровень провален!';
+    document.getElementById('goScore').innerHTML =
+      'Время: <b>' + Math.floor(state.levelElapsed) + ' / ' + state.levelTarget + 'с</b>';
+    document.getElementById('goRecord').style.display = 'none';
+    document.getElementById('goCoins').style.display = 'none';
+    document.getElementById('milestoneInfo').textContent = '';
+  } else {
+    document.getElementById('gameoverTitle').textContent = '💥 Игра окончена!';
+    document.getElementById('goScore').innerHTML = 'Счёт: <b id="finalScore">' + Math.floor(state.score) + '</b>';
+    document.getElementById('goRecord').style.display = '';
+    document.getElementById('goCoins').style.display = '';
+    document.getElementById('goRecord').innerHTML = 'Рекорд: <b>' + state.record + '</b>';
+
+    const earned = Math.floor(state.score / 10);
+    state.tokens += earned;
+    if (Math.floor(state.score) > state.record) state.record = Math.floor(state.score);
+
+    let milestoneGain = 0;
+    for (const m of MILESTONES) {
+      if (state.record >= m && !state.claimedMilestones.includes(m)) {
+        state.claimedMilestones.push(m);
+        state.tokens += m;
+        milestoneGain += m;
+      }
+    }
+    let level = 1;
+    while (state.record >= 100000 + level * 50000) {
+      const m = 100000 + level * 50000;
+      if (!state.claimedMilestones.includes(m)) {
+        state.claimedMilestones.push(m);
+        state.tokens += 50000;
+        milestoneGain += 50000;
+      }
+      level++;
+    }
+
+    document.getElementById('goCoins').innerHTML = '+' + earned + ' 🪙';
+    document.getElementById('milestoneInfo').textContent =
+      milestoneGain > 0 ? ('🏆 +' + milestoneGain + ' 🪙 за рекорд!') : '';
+    if (milestoneGain > 0) playSound(880, 0.15);
+  }
+
+  saveGame();
+
+  const btnDiv = document.getElementById('gameoverButtons');
+  btnDiv.innerHTML = '';
+
+  if (state.gameMode === 'level') {
+    const retryBtn = document.createElement('button');
+    retryBtn.textContent = '▶ Повторить';
+    retryBtn.className = 'green';
+    retryBtn.onclick = () => startGame('level', state.currentLevel);
+    btnDiv.appendChild(retryBtn);
+
+    const simplifyBtn = document.createElement('button');
+    simplifyBtn.textContent = '📺 Упростить уровень';
+    simplifyBtn.className = 'orange';
+    simplifyBtn.onclick = simplifyLevel;
+    btnDiv.appendChild(simplifyBtn);
+
+    const backBtn = document.createElement('button');
+    backBtn.textContent = '← К уровням';
+    backBtn.onclick = openPlaySelect;
+    btnDiv.appendChild(backBtn);
+  } else {
+    const retryBtn = document.createElement('button');
+    retryBtn.textContent = '▶ Ещё раз';
+    retryBtn.onclick = () => startGame('endless');
+    btnDiv.appendChild(retryBtn);
+
+    const menuBtn = document.createElement('button');
+    menuBtn.textContent = '🏠 Меню';
+    menuBtn.onclick = showMenu;
+    btnDiv.appendChild(menuBtn);
+  }
+
+  document.getElementById('topBar').classList.add('hidden');
+  document.getElementById('levelBar').classList.remove('on');
+  document.getElementById('gameover').classList.remove('hidden');
+}
+
+function levelComplete() {
+  state.screen = 'gameover';
+  playSound(1200, 0.5);
+  setTimeout(() => playSound(1500, 0.4), 200);
+
+  const lvl = state.currentLevel;
+  let reward = 0;
+  if (!state.levelsCompleted[lvl]) {
+    state.levelsCompleted[lvl] = true;
+    state.tokens += LEVEL_REWARD;
+    reward = LEVEL_REWARD;
+    saveGame();
+  }
+
+  document.getElementById('gameoverTitle').textContent = '🏆 Уровень пройден!';
+  document.getElementById('goScore').innerHTML = '✔ ' + LEVELS[lvl].name;
+  document.getElementById('goRecord').style.display = 'none';
+  document.getElementById('goCoins').style.display = '';
+  document.getElementById('goCoins').innerHTML = reward > 0
+    ? '+' + reward + ' 🪙'
+    : '✓ Уже был пройден';
+  document.getElementById('milestoneInfo').textContent = reward > 0 ? '🎉 Награда за первое прохождение!' : '';
+
+  const btnDiv = document.getElementById('gameoverButtons');
+  btnDiv.innerHTML = '';
+
+  if (lvl < LEVELS.length - 1 && state.levelsCompleted[lvl]) {
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = '▶ Следующий уровень';
+    nextBtn.className = 'green';
+    nextBtn.onclick = () => startGame('level', lvl + 1);
+    btnDiv.appendChild(nextBtn);
+  }
+
+  const backBtn = document.createElement('button');
+  backBtn.textContent = '← К уровням';
+  backBtn.onclick = openPlaySelect;
+  btnDiv.appendChild(backBtn);
+
+  document.getElementById('topBar').classList.add('hidden');
+  document.getElementById('levelBar').classList.remove('on');
+  document.getElementById('gameover').classList.remove('hidden');
+}
+
+function simplifyLevel() {
+  showAd(1, () => {
+    if (!Array.isArray(state.levelSimplified)) state.levelSimplified = new Array(LEVELS.length).fill(0);
+    state.levelSimplified[state.currentLevel] = (state.levelSimplified[state.currentLevel] || 0) + 1;
+    saveGame();
+    startGame('level', state.currentLevel);
+  });
+}
+
+/* ============================================================
+   РЕНДЕР
+   ============================================================ */
+function getPlayerStyle() {
+  if (state.useCustomColor && state.ownedColors[9]) {
+    return { fill: state.customColor, pattern: null };
+  }
+  const c = COLORS[state.selectedColor];
+  if (!c || !state.ownedColors[state.selectedColor]) {
+    return { fill: '#95a5a6', pattern: null };
+  }
+  if (c.animated) {
+    const hue = (performance.now() / 15) % 360;
+    return { fill: `hsl(${hue}, 100%, 60%)`, pattern: null };
+  }
+  if (c.pattern === 'rainbow') return { fill: null, pattern: 'rainbow' };
+  return { fill: c.color, pattern: null };
+}
+
+function getObstacleStyle() {
+  if (state.useCustomObstacle && state.ownedObstacles[9]) {
+    return { fill: state.customObstacle, glow: '#ff0000' };
+  }
+  const o = OBSTACLES[state.selectedObstacle];
+  if (!o || !state.ownedObstacles[state.selectedObstacle]) {
+    return { fill: '#7f8c8d', glow: '#ff0000' };
+  }
+  if (o.animated) {
+    const hue = (performance.now() / 10) % 360;
+    return { fill: `hsl(${hue}, 80%, 50%)`, glow: `hsl(${hue}, 100%, 60%)` };
+  }
+  return { fill: o.color, glow: '#ff0000' };
+}
+
+function getBgStyle() {
+  if (state.useCustomBg && state.ownedBackgrounds[9]) {
+    return { color: state.customBg, pattern: 'dots', animated: false };
+  }
+  const b = BACKGROUNDS[state.selectedBackground];
+  if (!b || !state.ownedBackgrounds[state.selectedBackground]) {
+    return { color: '#f9e79f', pattern: 'dots', animated: false };
+  }
+  if (b.animated) {
+    return { color: b.bg, pattern: b.pattern, animated: true };
+  }
+  return { color: b.bg, pattern: b.pattern, animated: false };
+}
+
+function render() {
+  const W = canvas.width || 960;
+  const H = canvas.height || 480;
+  if (!state.groundY || state.groundY <= 0 || state.groundY > H) {
+    state.groundY = H - 80;
+  }
+
+  const bg = getBgStyle();
+  ctx.fillStyle = bg.color || '#f9e79f';
+  ctx.fillRect(0, 0, W, H);
+  paintPattern(ctx, W, state.groundY, bg.pattern, bg.animated);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillRect(0, state.groundY, W, H - state.groundY);
+
+  const os = getObstacleStyle();
+  for (const o of state.obstacles) {
+    drawObstacle(o, os);
+  }
+
+  drawPlayer();
+}
+
+function drawObstacle(o, os) {
+  if (o.kind === 'ceiling') {
+    // Блок сверху
+    ctx.fillStyle = os.fill;
+    ctx.fillRect(o.x, o.y, o.w, o.h);
+
+    ctx.save();
+    ctx.shadowColor = os.glow;
+    ctx.shadowBlur = 16;
+    ctx.strokeStyle = os.glow;
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(o.x, o.y, o.w, o.h);
+    ctx.restore();
+
+    // Предупреждающая полоса снизу
+    const stripeH = 8;
+    for (let i = 0; i < o.w; i += 20) {
+      ctx.fillStyle = (Math.floor(i / 20) % 2 === 0) ? '#ffdd00' : '#ff2222';
+      ctx.fillRect(o.x + i, o.y + o.h - stripeH, Math.min(20, o.w - i), stripeH);
+    }
+    // Тонкая линия по центру
+    ctx.strokeStyle = 'rgba(255,80,80,0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(o.x + 5, o.y + 5, o.w - 10, o.h - 10);
+    return;
+  }
+
+  if (o.kind === 'spike') {
+    // Треугольник
+    ctx.fillStyle = os.fill;
+    ctx.beginPath();
+    ctx.moveTo(o.x, o.y + o.h);
+    ctx.lineTo(o.x + o.w / 2, o.y);
+    ctx.lineTo(o.x + o.w, o.y + o.h);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.save();
+    ctx.shadowColor = os.glow;
+    ctx.shadowBlur = 14;
+    ctx.strokeStyle = os.glow;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  if (o.kind === 'moving') {
+    // Направляющая линии (где может быть)
+    ctx.strokeStyle = 'rgba(255,120,120,0.35)';
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(o.x, o.lowY + o.h);
+    ctx.lineTo(o.x + o.w, o.lowY + o.h);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(o.x, o.lowY - o.amp);
+    ctx.lineTo(o.x + o.w, o.lowY - o.amp);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Обычные (basic, wide, moving)
+  ctx.fillStyle = os.fill;
+  ctx.fillRect(o.x, o.y, o.w, o.h);
+
+  ctx.save();
+  ctx.shadowColor = os.glow;
+  ctx.shadowBlur = 14;
+  ctx.strokeStyle = os.glow;
+  ctx.lineWidth = 2.5;
+  ctx.strokeRect(o.x, o.y, o.w, o.h);
+  ctx.restore();
+
+  // Внутренняя подсветка
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(o.x + 4, o.y + 4, o.w - 8, o.h - 8);
+
+  // Для wide рисуем «гору» поверх
+  if (o.kind === 'wide') {
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(o.x + 8, o.y + o.h - 8);
+    ctx.lineTo(o.x + o.w * 0.3, o.y + 8);
+    ctx.lineTo(o.x + o.w * 0.6, o.y + o.h * 0.5);
+    ctx.lineTo(o.x + o.w * 0.85, o.y + 8);
+    ctx.lineTo(o.x + o.w - 8, o.y + o.h - 8);
+    ctx.stroke();
+  }
+}
+
+function drawPlayer() {
+  const p = state.player;
+  if (!p) return;
+  const style = getPlayerStyle();
+
+  ctx.save();
+  ctx.translate(p.x + p.size / 2, p.y + p.size / 2);
+
+  if (style.pattern === 'rainbow') {
+    const g = ctx.createLinearGradient(-p.size/2, -p.size/2, p.size/2, p.size/2);
+    g.addColorStop(0, '#ff0000'); g.addColorStop(0.2, '#ff8800');
+    g.addColorStop(0.4, '#ffff00'); g.addColorStop(0.6, '#00ff00');
+    g.addColorStop(0.8, '#0088ff'); g.addColorStop(1, '#8800ff');
+    ctx.fillStyle = g;
+  } else {
+    ctx.fillStyle = style.fill;
+  }
+  ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+
+  if (style.pattern === 'rainbow') {
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    const r = p.size / 10;
+    const off = p.size / 4;
+    for (const [dx, dy] of [[-1,-1],[1,-1],[-1,1],[1,1]]) {
+      ctx.beginPath(); ctx.arc(dx * off, dy * off, r, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fill();
+  } else {
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillRect(-p.size/2, -p.size/6, p.size, 2);
+    ctx.fillRect(-p.size/2, p.size/6 - 2, p.size, 2);
+  }
+
+  ctx.fillStyle = '#000';
+  const er = p.size / 12;
+  ctx.beginPath(); ctx.arc(-p.size/5, -p.size/8, er, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( p.size/5, -p.size/8, er, 0, Math.PI*2); ctx.fill();
+
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-p.size/2, -p.size/2, p.size, p.size);
+
+  ctx.restore();
+}
+
+/* ============================================================
+   ВЫБОР РЕЖИМА / УРОВНИ
+   ============================================================ */
+function openPlaySelect() {
+  state.screen = 'playselect';
+  document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+  document.getElementById('playSelect').classList.remove('hidden');
+  renderLevels();
+}
+
+function renderLevels() {
+  const grid = document.getElementById('levelsGrid');
+  grid.innerHTML = '';
+  const maxUnlocked = state.levelsCompleted.findIndex(v => !v);
+  const unlockedUntil = maxUnlocked === -1 ? LEVELS.length - 1 : maxUnlocked;
+
+  LEVELS.forEach((lvl, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'level-btn';
+
+    const completed = state.levelsCompleted[i];
+    const unlocked = i <= unlockedUntil;
+    const simplified = state.levelSimplified[i] > 0;
+
+    if (completed) btn.classList.add('completed');
+    if (!unlocked && !completed) btn.classList.add('locked');
+    if (simplified) btn.classList.add('simplified');
+
+    const num = document.createElement('div');
+    num.className = 'lvl-num';
+    num.textContent = completed ? '✓' : (unlocked ? (i + 1) : '🔒');
+    btn.appendChild(num);
+
+    const tag = document.createElement('div');
+    tag.className = 'lvl-tag';
+    tag.textContent = lvl.time + 'с';
+    btn.appendChild(tag);
+
+    if (completed || unlocked) {
+      btn.onclick = () => startGame('level', i);
+    }
+
+    grid.appendChild(btn);
+  });
+}
+
+function resetLevels() {
+  if (!confirm('Сбросить весь прогресс уровней?')) return;
+  state.levelsCompleted = new Array(LEVELS.length).fill(false);
+  state.levelSimplified = new Array(LEVELS.length).fill(0);
+  saveGame();
+  updateSettingsUI();
+  alert('Прогресс уровней сброшен');
+}
+
+/* ============================================================
+   МАГАЗИН
+   ============================================================ */
+function openShop() {
+  state.screen = 'shop';
+  document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+  document.getElementById('shop').classList.remove('hidden');
+  document.getElementById('shopTokens').textContent = state.tokens;
+  renderShop();
+}
+
+function switchTab(tab) {
+  state.currentTab = tab;
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  const map = { colors:'tabColors', backgrounds:'tabBackgrounds', obstacles:'tabObstacles', music:'tabMusic', vitrina:'tabVitrina' };
+  document.getElementById(map[tab]).classList.add('active');
+  renderShop();
+}
+
+function makePreviewColor(c, customColor) {
+  const cv = document.createElement('canvas');
+  cv.width = 100; cv.height = 60;
+  const cx = cv.getContext('2d');
+  if (c.animated) {
+    const g = cx.createLinearGradient(20, 10, 80, 50);
+    g.addColorStop(0, '#ff0080'); g.addColorStop(0.5, '#00ffff'); g.addColorStop(1, '#ff0080');
+    cx.fillStyle = g;
+  } else if (c.custom) {
+    cx.fillStyle = customColor || '#888';
+  } else if (c.pattern === 'rainbow') {
+    const g = cx.createLinearGradient(20, 10, 80, 50);
+    g.addColorStop(0, '#ff0000'); g.addColorStop(0.2, '#ff8800');
+    g.addColorStop(0.4, '#ffff00'); g.addColorStop(0.6, '#00ff00');
+    g.addColorStop(0.8, '#0088ff'); g.addColorStop(1, '#8800ff');
+    cx.fillStyle = g;
+  } else cx.fillStyle = c.color || '#444';
+  cx.fillRect(30, 12, 40, 36);
+  cx.strokeStyle = '#000'; cx.lineWidth = 2;
+  cx.strokeRect(30, 12, 40, 36);
+  cx.fillStyle = '#000';
+  cx.beginPath(); cx.arc(43, 22, 3, 0, Math.PI*2); cx.fill();
+  cx.beginPath(); cx.arc(57, 22, 3, 0, Math.PI*2); cx.fill();
+  return cv;
+}
+
+function makePreviewBg(b, customColor) {
+  const cv = document.createElement('canvas');
+  cv.width = 100; cv.height = 60;
+  const cx = cv.getContext('2d');
+  if (b.custom) {
+    cx.fillStyle = customColor || '#888';
+    cx.fillRect(0, 0, 100, 60);
+    cx.fillStyle = 'rgba(0,0,0,0.1)';
+    for (let x = 0; x < 100; x += 14) for (let y = 0; y < 60; y += 14) {
+      cx.beginPath(); cx.arc(x + 7, y + 7, 2, 0, Math.PI*2); cx.fill();
+    }
+  } else if (b.animated) {
+    cx.fillStyle = b.bg;
+    cx.fillRect(0, 0, 100, 60);
+    paintPattern(cx, 100, 60, b.pattern, false);
+  } else if (b.bg) {
+    cx.fillStyle = b.bg;
+    cx.fillRect(0, 0, 100, 60);
+    if (b.pattern) paintPattern(cx, 100, 60, b.pattern, false);
+  }
+  return cv;
+}
+
+function makePreviewObstacle(o, customColor) {
+  const cv = document.createElement('canvas');
+  cv.width = 100; cv.height = 60;
+  const cx = cv.getContext('2d');
+  if (o.custom) cx.fillStyle = customColor || '#888';
+  else if (o.animated) {
+    const g = cx.createLinearGradient(25, 12, 75, 48);
+    g.addColorStop(0, '#ff0080'); g.addColorStop(0.5, '#00ffff'); g.addColorStop(1, '#ff0080');
+    cx.fillStyle = g;
+  } else cx.fillStyle = o.color || '#444';
+  cx.fillRect(25, 12, 50, 36);
+  cx.save();
+  cx.strokeStyle = '#ff2222';
+  cx.lineWidth = 2;
+  cx.shadowColor = '#ff0000';
+  cx.shadowBlur = 8;
+  cx.strokeRect(25, 12, 50, 36);
+  cx.restore();
+  return cv;
+}
+
+function makeColorPicker(category, currentColor) {
+  const input = document.createElement('input');
+  input.type = 'color';
+  input.value = currentColor;
+  input.oninput = (e) => {
+    const v = e.target.value;
+    if (category === 'colors') state.customColor = v;
+    if (category === 'backgrounds') state.customBg = v;
+    if (category === 'obstacles') state.customObstacle = v;
+    saveGame();
+  };
+  return input;
+}
+
+function makeShopCard(opts) {
+  const { name, previewEl, owned, selected, category, adsCost, tokenCost,
+          onSelect, onBuy, custom, currentColor } = opts;
+
+  const div = document.createElement('div');
+  div.className = 'shop-item';
+
+  const prev = document.createElement('div');
+  prev.className = 'preview';
+  if (custom && owned) {
+    prev.appendChild(makeColorPicker(category, currentColor));
+  } else if (previewEl instanceof HTMLElement) {
+    prev.appendChild(previewEl);
+  } else {
+    prev.textContent = previewEl || '';
+  }
+  div.appendChild(prev);
+
+  const nm = document.createElement('div');
+  nm.className = 'item-name';
+  nm.textContent = name;
+  div.appendChild(nm);
+
+  if (owned) {
+    const b = document.createElement('button');
+    b.className = 'small';
+    if (selected) { b.textContent = '✓ Выбрано'; b.disabled = true; }
+    else { b.textContent = 'Выбрать'; b.onclick = onSelect; }
+    div.appendChild(b);
+  } else {
+    if (adsCost > 0) {
+      const b = document.createElement('button');
+      b.className = 'small';
+      b.textContent = '📺 ' + adsCost + ' рекл.';
+      b.onclick = () => onBuy('ads');
+      div.appendChild(b);
+    }
+    if (tokenCost > 0) {
+      const b = document.createElement('button');
+      b.className = 'small';
+      b.textContent = '🪙 ' + tokenCost;
+      b.onclick = () => onBuy('tokens');
+      div.appendChild(b);
+    }
+  }
+  return div;
+}
+
+function renderShop() {
+  document.getElementById('shopTokens').textContent = state.tokens;
+  const grid = document.getElementById('shopGrid');
+  grid.innerHTML = '';
+
+  if (state.currentTab === 'colors') {
+    COLORS.forEach((c, i) => {
+      const isOwned = state.ownedColors[i];
+      const isSel = !state.useCustomColor && state.selectedColor === i;
+      grid.appendChild(makeShopCard({
+        name: c.name, previewEl: makePreviewColor(c, state.customColor),
+        owned: isOwned, selected: isSel, category: 'colors',
+        adsCost: isOwned ? 0 : (c.ads || 0), tokenCost: isOwned ? 0 : (c.tokens || 0),
+        custom: !!c.custom, currentColor: state.customColor,
+        onSelect: () => {
+          if (c.custom) { state.useCustomColor = true; state.selectedColor = 9; }
+          else { state.selectedColor = i; state.useCustomColor = false; }
+          saveGame(); renderShop();
+        },
+        onBuy: (method) => buyItem('colors', i, method, c.ads, c.tokens)
+      }));
+    });
+  } else if (state.currentTab === 'backgrounds') {
+    BACKGROUNDS.forEach((b, i) => {
+      const isOwned = state.ownedBackgrounds[i];
+      const isSel = !state.useCustomBg && state.selectedBackground === i;
+      grid.appendChild(makeShopCard({
+        name: b.name, previewEl: makePreviewBg(b, state.customBg),
+        owned: isOwned, selected: isSel, category: 'backgrounds',
+        adsCost: isOwned ? 0 : (b.ads || 0), tokenCost: isOwned ? 0 : (b.tokens || 0),
+        custom: !!b.custom, currentColor: state.customBg,
+        onSelect: () => {
+          if (b.custom) { state.useCustomBg = true; state.selectedBackground = 9; }
+          else { state.selectedBackground = i; state.useCustomBg = false; }
+          saveGame(); renderShop();
+        },
+        onBuy: (method) => buyItem('backgrounds', i, method, b.ads, b.tokens)
+      }));
+    });
+  } else if (state.currentTab === 'obstacles') {
+    OBSTACLES.forEach((o, i) => {
+      const isOwned = state.ownedObstacles[i];
+      const isSel = !state.useCustomObstacle && state.selectedObstacle === i;
+      grid.appendChild(makeShopCard({
+        name: o.name, previewEl: makePreviewObstacle(o, state.customObstacle),
+        owned: isOwned, selected: isSel, category: 'obstacles',
+        adsCost: isOwned ? 0 : (o.ads || 0), tokenCost: isOwned ? 0 : (o.tokens || 0),
+        custom: !!o.custom, currentColor: state.customObstacle,
+        onSelect: () => {
+          if (o.custom) { state.useCustomObstacle = true; state.selectedObstacle = 9; }
+          else { state.selectedObstacle = i; state.useCustomObstacle = false; }
+          saveGame(); renderShop();
+        },
+        onBuy: (method) => buyItem('obstacles', i, method, o.ads, o.tokens)
+      }));
+    });
+  } else if (state.currentTab === 'music') {
+    MUSIC.forEach((m, i) => {
+      const isOwned = state.ownedMusic[i];
+      grid.appendChild(makeShopCard({
+        name: m.name, previewEl: '🎵',
+        owned: isOwned, selected: state.selectedMusic === i, category: 'music',
+        adsCost: isOwned ? 0 : (m.ads || 0), tokenCost: isOwned ? 0 : (m.tokens || 0),
+        onSelect: () => { state.selectedMusic = i; saveGame(); renderShop(); },
+        onBuy: (method) => buyItem('music', i, method, m.ads, m.tokens)
+      }));
+    });
+  } else if (state.currentTab === 'vitrina') {
+    VITRINA.forEach(offer => {
+      const div = document.createElement('div');
+      div.className = 'shop-item';
+      div.style.gridColumn = 'span 2';
+      div.style.padding = '16px';
+
+      const prev = document.createElement('div');
+      prev.className = 'preview';
+      prev.style.height = '80px';
+      prev.style.fontSize = '52px';
+      prev.textContent = offer.emoji;
+      div.appendChild(prev);
+
+      const nm = document.createElement('div');
+      nm.className = 'item-name';
+      nm.style.fontSize = '18px';
+      nm.textContent = offer.name;
+      div.appendChild(nm);
+
+      const b = document.createElement('button');
+      b.className = 'small';
+      b.style.fontSize = '15px';
+      b.style.padding = '12px';
+      b.textContent = '📺 ' + offer.ads + ' ' + (offer.ads === 1 ? 'реклама' : 'рекламы');
+      b.onclick = () => {
+        showAd(offer.ads, () => {
+          state.tokens += offer.tokens;
+          saveGame();
+          renderShop();
+          playSound(880, 0.2);
+          alert('Получено ' + offer.tokens + ' 🪙!');
+        });
+      };
+      div.appendChild(b);
+
+      grid.appendChild(div);
+    });
+  }
+}
+
+function buyItem(category, index, method, adsCost, tokenCost) {
+  if (method === 'tokens') {
+    if (state.tokens >= tokenCost) {
+      state.tokens -= tokenCost;
+      grantItem(category, index);
+    } else {
+      alert('Недостаточно токенов!');
+    }
+  } else if (method === 'ads') {
+    showAd(adsCost, () => grantItem(category, index));
+  }
+}
+
+function grantItem(category, index) {
+  if (category === 'colors') state.ownedColors[index] = true;
+  else if (category === 'backgrounds') state.ownedBackgrounds[index] = true;
+  else if (category === 'obstacles') state.ownedObstacles[index] = true;
+  else if (category === 'music') state.ownedMusic[index] = true;
+  saveGame();
+  renderShop();
+  playSound(880, 0.1);
+}
+
+/* ============================================================
+   РЕКЛАМА
+   ============================================================ */
+let adInProgress = false;
+function showAd(count, callback) {
+  if (adInProgress) return;
+  if (count <= 0) { callback(); return; }
+  adInProgress = true;
+  const ov = document.getElementById('adOverlay');
+  const cd = document.getElementById('adCountdown');
+  ov.classList.remove('hidden');
+
+  let adsLeft = count;
+  let secs = 2;
+
+  function tick() {
+    cd.textContent = adsLeft + ' / ' + count + ' · ' + secs + 'с';
+    if (secs <= 0) {
+      adsLeft--;
+      if (adsLeft <= 0) {
+        ov.classList.add('hidden');
+        adInProgress = false;
+        callback();
+        return;
+      }
+      secs = 2;
+    }
+    secs--;
+    setTimeout(tick, 1000);
+  }
+  tick();
+}
+
+/* ============================================================
+   НАСТРОЙКИ
+   ============================================================ */
+function openSettings() {
+  state.screen = 'settings';
+  document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+  document.getElementById('settings').classList.remove('hidden');
+  updateSettingsUI();
+}
+
+function updateSettingsUI() {
+  document.getElementById('btnAuto').textContent = state.autoMode ? 'ВКЛ' : 'ВЫКЛ';
+  document.getElementById('btnSound').textContent = state.soundOn ? 'ВКЛ' : 'ВЫКЛ';
+  document.getElementById('speedLabel').textContent = state.speedMultiplier + 'x';
+
+  const unlockBtn = document.getElementById('btnUnlockSpeed');
+  if (state.speedUnlocked) {
+    unlockBtn.textContent = '✓ Разблокировано';
+    unlockBtn.disabled = true;
+  } else {
+    unlockBtn.textContent = '📺 5 рекл.';
+    unlockBtn.disabled = false;
+  }
+
+  const djBtn = document.getElementById('btnDoubleJump');
+  if (state.doubleJumpUnlocked) {
+    djBtn.textContent = '✓ Разблокировано';
+    djBtn.disabled = true;
+  } else {
+    djBtn.textContent = '📺 10 рекл.';
+    djBtn.disabled = false;
+  }
+
+  const done = state.levelsCompleted.filter(Boolean).length;
+  document.getElementById('levelProgressLabel').textContent = done + ' / ' + LEVELS.length;
+
+  const list = document.getElementById('levelIndexList');
+  list.innerHTML = '';
+  LEVELS.forEach((lvl, i) => {
+    const row = document.createElement('div');
+    row.className = 'lvl-row';
+    const completed = state.levelsCompleted[i];
+    const simpl = state.levelSimplified[i] || 0;
+    const icon = completed ? '✅' : '🔒';
+    const cls = completed ? 'lvl-done' : 'lvl-lock';
+    const info = completed
+      ? ('пройден' + (simpl > 0 ? ' (упрощён×' + simpl + ')' : ''))
+      : '—';
+    row.innerHTML = `<span class="${cls}">${icon} ${lvl.name}</span><span class="${cls}">${info}</span>`;
+    list.appendChild(row);
+  });
+}
+
+function toggleSetting(key) {
+  state[key] = !state[key];
+  saveGame();
+  updateSettingsUI();
+}
+
+function setSpeed(mult) {
+  if (mult !== 1 && !state.speedUnlocked) {
+    alert('Сначала разблокируйте за 5 реклам!');
+    return;
+  }
+  state.speedMultiplier = mult;
+  saveGame();
+  updateSettingsUI();
+}
+
+function unlockSpeed() {
+  if (state.speedUnlocked) return;
+  showAd(5, () => {
+    state.speedUnlocked = true;
+    saveGame();
+    updateSettingsUI();
+  });
+}
+
+function unlockDoubleJump() {
+  if (state.doubleJumpUnlocked) return;
+  showAd(10, () => {
+    state.doubleJumpUnlocked = true;
+    saveGame();
+    updateSettingsUI();
+    alert('Двойной прыжок разблокирован!');
+  });
+}
+
+function applyPromo() {
+  const input = document.getElementById('promoInput');
+  const code = input.value.trim();
+  if (state.promoUsed) { alert('Промокод уже использован!'); return; }
+  if (code.toLowerCase() === 'патрик джейн') {
+    state.tokens += 1000000;
+    state.promoUsed = true;
+    saveGame();
+    input.value = '';
+    playSound(1200, 0.3);
+    alert('🎉 Промокод активирован! +1 000 000 🪙');
+  } else {
+    alert('Неверный промокод');
+  }
+}
+
+/* ============================================================
+   МЕНЮ
+   ============================================================ */
+function showMenu() {
+  state.screen = 'menu';
+  document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+  document.getElementById('menu').classList.remove('hidden');
+  document.getElementById('topBar').classList.add('hidden');
+  document.getElementById('levelBar').classList.remove('on');
+  document.getElementById('menuTokens').textContent = state.tokens;
+  document.getElementById('menuRecord').textContent = state.record;
+}
+
+/* ============================================================
+   СТАРТ
+   ============================================================ */
+loadGame();
+showMenu();
+</script>
+</body>
+</html>
